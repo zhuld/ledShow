@@ -1,0 +1,6 @@
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\ledShow.csproj.AssemblyReference.cache
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\ledShow.csproj.CoreCompileInputs.cache
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\ledShow.exe
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\ledShow.pdb
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\ledShow.exe
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\ledShow.pdb

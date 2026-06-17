@@ -1,0 +1,46 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run LED Display",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"ledShow"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build LED Display",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"ledShow"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build LED Display",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"ledShow"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build LED Display",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"ledShow"
+			],
+			"group": "build"
+		}
+	]
+}

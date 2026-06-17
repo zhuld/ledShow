@@ -1,0 +1,14 @@
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.GeneratedMSBuildEditorConfig.editorconfig
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.AssemblyInfoInputs.cache
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.AssemblyInfo.cs
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.csproj.CoreCompileInputs.cache
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\net9.0-windows\ledShow.exe
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\net9.0-windows\ledShow.deps.json
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\net9.0-windows\ledShow.runtimeconfig.json
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\net9.0-windows\ledShow.dll
+D:\zld\visual studio\Projects\ledShow\ledShow\bin\Debug\net9.0-windows\ledShow.pdb
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.dll
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\refint\ledShow.dll
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.pdb
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ledShow.genruntimeconfig.cache
+D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net9.0-windows\ref\ledShow.dll
