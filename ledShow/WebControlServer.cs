@@ -122,15 +122,15 @@ input[type=""file""] {
   <div class=""grid-3"">
     <div class=""form-group"">
       <label for=""cdHour"">时</label>
-      <input type=""text"" id=""cdHour"" placeholder=""0"">
+      <input type=""text"" id=""cdHour"" placeholder=""0"" value=""0"">
     </div>
     <div class=""form-group"">
       <label for=""cdMin"">分</label>
-      <input type=""text"" id=""cdMin"" placeholder=""0"">
+      <input type=""text"" id=""cdMin"" placeholder=""10"" value=""10"">
     </div>
     <div class=""form-group"">
       <label for=""cdSec"">秒</label>
-      <input type=""text"" id=""cdSec"" placeholder=""30"">
+      <input type=""text"" id=""cdSec"" placeholder=""0"" value=""0"">
     </div>
   </div>
   <div class=""btn-row"">

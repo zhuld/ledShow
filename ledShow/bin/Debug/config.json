@@ -1,7 +1,7 @@
 ﻿{
-  "width": 1100,
-  "height": 190,
+  "width": 1000,
+  "height": 180,
   "webPort": 8000,
-  "marqueeText": "热烈欢迎，使用LED播放程序",
+  "marqueeText": "热烈欢迎 使用LED播放程序",
   "logoPath": "D:\\zld\\visual studio\\Projects\\ledShow\\ledShow\\bin\\Debug\\logos\\logo_639173096126532057.png"
 }

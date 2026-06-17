@@ -43,7 +43,6 @@ namespace ledShow
         private int _countdownTotalSeconds;
         private double _countdownRemainingSeconds;
         private int _countdownEndTick;          // Environment.TickCount 倒计时结束时刻
-        private int _countdownFinishedTick;     // Environment.TickCount 倒计时完成后进入 Finished 的时刻
         private bool _reminded1Min;             // 1 分钟提醒是否已触发
         private string _notificationMsg = "";   // 当前提醒文字
         private int _notificationEndTick;       // 提醒显示截止时刻
@@ -211,7 +210,7 @@ namespace ledShow
             g.DrawEllipse(innerPen, cx - r + 8, cy - r + 8, (r - 8) * 2, (r - 8) * 2);
         }
 
-        // ── 刻度 & 数字 ──
+        // ── 刻度 & 阿拉伯数字 1~12 ──
         for (int i = 0; i < 12; i++)
         {
             double angle = i * 30 - 90;
@@ -231,20 +230,16 @@ namespace ledShow
                 g.DrawLine(tickPen, innerX, innerY, outerX, outerY);
             }
 
-            // 数字（仅 12、3、6、9）
-            if (i % 3 == 0)
+            // 阿拉伯数字 1~12
+            float numR = r - 22;
+            float numX = cx + (float)(numR * Math.Cos(rad));
+            float numY = cy + (float)(numR * Math.Sin(rad));
+            string num = (i == 0 ? 12 : i).ToString();
+            using (var numFont = new Font("Arial", 10, FontStyle.Bold))
+            using (var numBrush = new SolidBrush(Color.FromArgb(160, 200, 240)))
             {
-                float numR = r - 22;
-                float numX = cx + (float)(numR * Math.Cos(rad));
-                float numY = cy + (float)(numR * Math.Sin(rad));
-                string[] roman = { "XII", "III", "VI", "IX" };
-                string num = roman[i / 3];
-                using (var numFont = new Font("Arial", 10, FontStyle.Bold))
-                using (var numBrush = new SolidBrush(Color.FromArgb(160, 200, 240)))
-                {
-                    var sz = g.MeasureString(num, numFont);
-                    g.DrawString(num, numFont, numBrush, numX - sz.Width / 2, numY - sz.Height / 2);
-                }
+                var sz = g.MeasureString(num, numFont);
+                g.DrawString(num, numFont, numBrush, numX - sz.Width / 2, numY - sz.Height / 2);
             }
         }
 
@@ -362,8 +357,7 @@ namespace ledShow
             if (remaining <= 0)
             {
                 _countdownRemainingSeconds = 0;
-                _countdownState = CountdownState.Finished;
-                _countdownFinishedTick = now;
+                _countdownState = CountdownState.Idle;  // 倒计时结束，立即恢复滚动字符
             }
             else
             {
@@ -378,14 +372,7 @@ namespace ledShow
                 }
             }
         }
-        else if (_countdownState == CountdownState.Finished)
-        {
-            // 保持 Finished 状态 1 分钟（60000ms）后恢复空闲
-            if (now - _countdownFinishedTick >= 60000)
-            {
-                _countdownState = CountdownState.Idle;
-            }
-        }
+
 
         // ── 字幕滚动（仅在倒计时空闲时滚动）──
         if (_countdownState == CountdownState.Idle && marqueeNeedsScroll)
