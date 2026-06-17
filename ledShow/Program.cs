@@ -5,6 +5,8 @@ namespace ledShow
 {
     static class Program
     {
+        private static WebControlServer _webServer;
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
@@ -26,7 +28,14 @@ namespace ledShow
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1(config));
+
+            Form1 form = new Form1(config);
+
+            // 启动网页控制服务器
+            _webServer = new WebControlServer(form, config);
+            _webServer.Start();
+
+            Application.Run(form);
         }
     }
 }

@@ -2,21 +2,25 @@ using System;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace ledShow
 {
+    // 用于线程安全调用的委托
+    public delegate void StringArgDelegate(string text);
+
     public partial class Form1 : Form
     {
         // ── 无边框窗口拖动 ──
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HT_CAPTION = 0x2;
+        // public const int WM_NCLBUTTONDOWN = 0xA1;
+        // public const int HT_CAPTION = 0x2;
 
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-        [DllImport("user32.dll")]
-        public static extern bool ReleaseCapture();
+        // [DllImport("user32.dll")]
+        // public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        // [DllImport("user32.dll")]
+        // public static extern bool ReleaseCapture();
 
         // ── 控件 ──
         private PictureBox logoBox = null;
@@ -33,6 +37,21 @@ namespace ledShow
         private float marqueeTextWidth;
         private bool marqueeNeedsScroll;      // 文字是否需要滚动
 
+        // ── 倒计时 ──
+        private enum CountdownState { Idle, Running, Finished }
+        private CountdownState _countdownState = CountdownState.Idle;
+        private int _countdownTotalSeconds;
+        private double _countdownRemainingSeconds;
+        private int _countdownEndTick;          // Environment.TickCount 倒计时结束时刻
+        private int _countdownFinishedTick;     // Environment.TickCount 倒计时完成后进入 Finished 的时刻
+        private bool _reminded1Min;             // 1 分钟提醒是否已触发
+        private string _notificationMsg = "";   // 当前提醒文字
+        private int _notificationEndTick;       // 提醒显示截止时刻
+
+        // ── 字体 ──
+        private System.Drawing.Text.PrivateFontCollection _fontCollection = null;
+        private FontFamily _countdownFontFamily = null;
+
         // ── 时钟 ──
 
         private readonly int formWidth;
@@ -46,11 +65,35 @@ namespace ledShow
             formHeight = config.Height;
             marqueeText = config.MarqueeText;
             InitializeComponent();
+            LoadFont();
             InitForm();
             InitLogo();
             InitClock();
             InitMarquee();
         }
+
+    // ═══════════════════════════════════════════
+    //  加载 LED 字体
+    // ═══════════════════════════════════════════
+    private void LoadFont()
+    {
+        try
+        {
+            string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
+            string fontPath = Path.Combine(exeDir, "DSEG14Classic-Regular.ttf");
+            if (File.Exists(fontPath))
+            {
+                _fontCollection = new System.Drawing.Text.PrivateFontCollection();
+                _fontCollection.AddFontFile(fontPath);
+                if (_fontCollection.Families.Length > 0)
+                    _countdownFontFamily = _fontCollection.Families[0];
+            }
+        }
+        catch
+        {
+            // 字体加载失败则使用系统默认字体
+        }
+    }
 
     // ═══════════════════════════════════════════
     //  窗体初始化
@@ -67,14 +110,14 @@ namespace ledShow
         DoubleBuffered = true;
 
         // 允许拖动窗口
-        MouseDown += (s, e) =>
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
-        };
+        // MouseDown += (s, e) =>
+        // {
+        //     if (e.Button == MouseButtons.Left)
+        //     {
+        //         ReleaseCapture();
+        //         SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+        //     }
+        // };
     }
 
     // ═══════════════════════════════════════════
@@ -312,13 +355,49 @@ namespace ledShow
         int elapsed = now - lastTick;
         lastTick = now;
 
-        // 防止卡顿时瞬间大跳
-        if (elapsed > 0 && elapsed < 100)
-            scrollX -= 0.15f * elapsed;
+        // ── 倒计时逻辑 ──
+        if (_countdownState == CountdownState.Running)
+        {
+            double remaining = (_countdownEndTick - now) / 1000.0;
+            if (remaining <= 0)
+            {
+                _countdownRemainingSeconds = 0;
+                _countdownState = CountdownState.Finished;
+                _countdownFinishedTick = now;
+            }
+            else
+            {
+                _countdownRemainingSeconds = remaining;
 
-// 完全移出左侧后，将滚动位置向前回绕一整段，实现无缝衔接
+                // ── 到达时间点提醒 ──
+                int secs = (int)Math.Ceiling(remaining);
+                if (!_reminded1Min && secs <= 60 && _countdownTotalSeconds > 60)
+                {
+                    _reminded1Min = true;
+                    ShowNotification("还剩1分钟!");
+                }
+            }
+        }
+        else if (_countdownState == CountdownState.Finished)
+        {
+            // 保持 Finished 状态 1 分钟（60000ms）后恢复空闲
+            if (now - _countdownFinishedTick >= 60000)
+            {
+                _countdownState = CountdownState.Idle;
+            }
+        }
+
+        // ── 字幕滚动（仅在倒计时空闲时滚动）──
+        if (_countdownState == CountdownState.Idle && marqueeNeedsScroll)
+        {
+            // 防止卡顿时瞬间大跳
+            if (elapsed > 0 && elapsed < 100)
+                scrollX -= 0.15f * elapsed;
+
+            // 完全移出左侧后，将滚动位置向前回绕一整段，实现无缝衔接
             if (scrollX + marqueeTextWidth < 0)
                 scrollX += marqueeTextWidth + 30;
+        }
 
         Invalidate();           // 刷新字幕+时钟（窗体双缓冲，无闪烁）
     }
@@ -335,6 +414,70 @@ namespace ledShow
         float marqueeWidth = marqueeRight - marqueeLeft;
         float centerY = Height / 2f;
 
+        // ── 倒计时显示（优先级高于字幕）──
+        if (_countdownState != CountdownState.Idle)
+        {
+            string displayText;
+            Color textColor;
+
+            if (_countdownState == CountdownState.Running)
+            {
+                // ── 有活跃提醒时显示提醒文字（持续 2 秒）──
+                if (!string.IsNullOrEmpty(_notificationMsg) && Environment.TickCount < _notificationEndTick)
+                {
+                    int fontSize = (int)(formHeight * 0.7f);
+                    using (var font = new Font("微软雅黑", fontSize, FontStyle.Bold, GraphicsUnit.Pixel))
+                    using (var brush = new SolidBrush(Color.Gold))
+                    {
+                        g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
+                        var sz = g.MeasureString(_notificationMsg, font);
+                        float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
+                        float cy = centerY - sz.Height / 2f;
+                        g.DrawString(_notificationMsg, font, brush, cx, cy);
+                        g.ResetClip();
+                    }
+                    return;
+                }
+                else
+                {
+                    _notificationMsg = "";  // 过期后清除
+                }
+
+                int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
+                int h = totalSecs / 3600;
+                int m = (totalSecs % 3600) / 60;
+                int s = totalSecs % 60;
+                displayText = string.Format("{0:D2}:{1:D2}:{2:D2}", h, m, s);
+                if (totalSecs <= 60)
+                    textColor = Color.Red;
+                else if (totalSecs <= 300)
+                    textColor = Color.Orange;
+                else
+                    textColor = Color.Lime;
+            }
+            else
+            {
+                displayText = "时间到!";
+                textColor = Color.Gold;
+            }
+
+            int fontSize2 = (int)(formHeight * 0.63f);
+            using (var font = _countdownFontFamily != null
+                ? new Font(_countdownFontFamily, fontSize2, FontStyle.Bold, GraphicsUnit.Pixel)
+                : new Font("Consolas", fontSize2, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (var brush = new SolidBrush(textColor))
+            {
+                g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
+                var sz = g.MeasureString(displayText, font);
+                float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
+                float cy = centerY - sz.Height / 2f;
+                g.DrawString(displayText, font, brush, cx, cy);
+                g.ResetClip();
+            }
+            return;
+        }
+
+        // ── 滚动字幕 ──
         // 设置裁剪区域，使文字仅在 Logo 和时钟之间的区域可见
         g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
 
@@ -385,5 +528,138 @@ namespace ledShow
         logoBox.Image = image;
         logoBox.Invalidate();
     }
+
+    // ═══════════════════════════════════════════
+    //  公开方法：网页控制接口
+    // ═══════════════════════════════════════════
+
+    /// <summary>更新滚动字幕文字（线程安全）</summary>
+    public void UpdateMarqueeText(string text)
+    {
+        if (InvokeRequired)
+        {
+            Invoke(new StringArgDelegate(UpdateMarqueeText), text);
+            return;
+        }
+
+        marqueeText = text;
+        // 重新计算字体和宽度
+        if (marqueeFont != null)
+        {
+            marqueeFont.Dispose();
+        }
+        int fontSize = (int)(formHeight * 0.8f);
+        marqueeFont = new Font("微软雅黑", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+        using (var tmpG = CreateGraphics())
+        {
+            marqueeTextWidth = tmpG.MeasureString(marqueeText, marqueeFont).Width;
+        }
+
+        float marqueeLeft = Math.Max(logoBox.Right + 15, 10);
+        float marqueeRight = clockAreaLeft - 15;
+        float availableWidth = marqueeRight - marqueeLeft;
+        marqueeNeedsScroll = marqueeTextWidth > availableWidth;
+
+        if (marqueeNeedsScroll)
+        {
+            scrollX = formWidth;
+        }
+
+        Invalidate();
+    }
+
+    /// <summary>清除 Logo（线程安全）</summary>
+    public void ClearLogo()
+    {
+        if (InvokeRequired)
+        {
+            Invoke(new MethodInvoker(ClearLogo));
+            return;
+        }
+
+        if (logoBox.Image != null)
+        {
+            logoBox.Image.Dispose();
+            logoBox.Image = null;
+        }
+        logoBox.Invalidate();
+    }
+
+    // ═══════════════════════════════════════════
+    //  公开方法：倒计时控制
+    // ═══════════════════════════════════════════
+
+    /// <summary>开始倒计时（线程安全）</summary>
+    /// <param name="seconds">倒计时秒数</param>
+    public void StartCountdown(int seconds)
+    {
+        if (InvokeRequired)
+        {
+            Invoke(new CountdownStartDelegate(StartCountdown), seconds);
+            return;
+        }
+
+        _countdownTotalSeconds = seconds;
+        _countdownRemainingSeconds = seconds;
+        _countdownState = CountdownState.Running;
+        _countdownEndTick = Environment.TickCount + seconds * 1000;
+        lastTick = Environment.TickCount;
+        Invalidate();
+    }
+
+    /// <summary>重置/取消倒计时（线程安全）</summary>
+    public void ResetCountdown()
+    {
+        if (InvokeRequired)
+        {
+            Invoke(new MethodInvoker(ResetCountdown));
+            return;
+        }
+
+        _countdownState = CountdownState.Idle;
+        _countdownRemainingSeconds = 0;
+        _reminded1Min = false;
+        _notificationMsg = "";
+        Invalidate();
+    }
+
+    /// <summary>显示提醒通知（2 秒后自动消失）</summary>
+    private void ShowNotification(string msg)
+    {
+        _notificationMsg = msg;
+        _notificationEndTick = Environment.TickCount + 2000;
+        SystemSounds.Beep.Play();
+    }
+
+    /// <summary>获取倒计时状态（线程安全，供 API 调用）</summary>
+    public string GetCountdownStatus()
+    {
+        if (InvokeRequired)
+        {
+            return (string)Invoke(new StringReturnDelegate(GetCountdownStatus));
+        }
+
+        string stateStr;
+        switch (_countdownState)
+        {
+            case CountdownState.Running:
+                stateStr = "running";
+                break;
+            case CountdownState.Finished:
+                stateStr = "finished";
+                break;
+            default:
+                stateStr = "idle";
+                break;
+        }
+
+        return "{\"state\":\"" + stateStr + "\",\"remaining\":" +
+            (int)Math.Ceiling(_countdownRemainingSeconds) + ",\"total\":" +
+            _countdownTotalSeconds + "}";
+    }
 }
 }
+
+// 额外的委托定义
+public delegate void CountdownStartDelegate(int seconds);
+public delegate string StringReturnDelegate();

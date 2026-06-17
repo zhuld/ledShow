@@ -11,6 +11,7 @@ namespace ledShow
     {
         public int Width { get; set; }
         public int Height { get; set; }
+        public int WebPort { get; set; }
         public string MarqueeText { get; set; }
         public string LogoPath { get; set; }
 
@@ -27,12 +28,14 @@ namespace ledShow
         // ── 默认值 ──
         private const int DEFAULT_WIDTH = 1500;
         private const int DEFAULT_HEIGHT = 190;
+        private const int DEFAULT_WEBPORT = 8000;
         private const string DEFAULT_MARQUEE = "热烈欢迎，这里是LED显示程序";
 
         public Config()
         {
             Width = DEFAULT_WIDTH;
             Height = DEFAULT_HEIGHT;
+            WebPort = DEFAULT_WEBPORT;
             MarqueeText = DEFAULT_MARQUEE;
             LogoPath = "";
         }
@@ -80,12 +83,13 @@ namespace ledShow
         //  简易 JSON 序列化/反序列化（仅支持此简单结构）
         // ════════════════════════════════════════
 
-        private string ToJson()
+        public string ToJson()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("{");
             sb.AppendLine("  \"width\": " + Width + ",");
             sb.AppendLine("  \"height\": " + Height + ",");
+            sb.AppendLine("  \"webPort\": " + WebPort + ",");
             sb.AppendLine("  \"marqueeText\": " + EncodeString(MarqueeText) + ",");
             sb.AppendLine("  \"logoPath\": " + EncodeString(LogoPath));
             sb.AppendLine("}");
@@ -96,6 +100,7 @@ namespace ledShow
         {
             Width = ParseInt(json, "width", DEFAULT_WIDTH);
             Height = ParseInt(json, "height", DEFAULT_HEIGHT);
+            WebPort = ParseInt(json, "webPort", DEFAULT_WEBPORT);
             MarqueeText = ParseString(json, "marqueeText", DEFAULT_MARQUEE);
             LogoPath = ParseString(json, "logoPath", "");
         }
