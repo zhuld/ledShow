@@ -1,5 +1,0 @@
-D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net20\ledShow.csproj.AssemblyReference.cache
-D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net20\ledShow.GeneratedMSBuildEditorConfig.editorconfig
-D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net20\ledShow.AssemblyInfoInputs.cache
-D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net20\ledShow.AssemblyInfo.cs
-D:\zld\visual studio\Projects\ledShow\ledShow\obj\Debug\net20\ledShow.csproj.CoreCompileInputs.cache

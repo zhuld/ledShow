@@ -7,7 +7,6 @@
     <RootNamespace>ledShow</RootNamespace>
     <AssemblyName>ledShow</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,7 +37,7 @@
     <Compile Include="WebControlServer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DSEG14Classic-Regular.ttf">
+    <Content Include="Resources\DSEG14Classic-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

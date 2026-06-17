@@ -1,0 +1,36 @@
+# .NET Build Output
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.exe.config
+*.manifest
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# User-specific files
+*.rsuser
+*.dll.config
+*.log
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# macOS
+.DS_Store
+
+# Visual Studio Code
+.vscode/
+
+# Debug logs
+*.dbmdl
+*.log

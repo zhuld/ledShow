@@ -13,16 +13,28 @@
 
 ## 项目结构
 
-| 文件 | 说明 |
-|------|------|
-| `Form1.cs` | 核心代码：字段、构造函数、窗体/LED 字体/Logo 初始化 |
-| `Form1.Clock.cs` | 模拟时钟绘制（表盘、指针） |
-| `Form1.Scrolling.cs` | 滚动字幕 + 倒计时逻辑 + 主渲染方法 |
-| `Form1.Public.cs` | 公开 API（字幕更新、Logo、倒计时控制等） |
-| `Form1.Designer.cs` | 窗体设计器代码 |
-| `WebControlServer.cs` | 内置 HTTP 网页控制服务器 |
-| `Config.cs` | 配置文件读写 |
-| `Program.cs` | 入口点 |
+```
+ledShow/
+├── .gitignore              # Git 忽略规则
+├── LICENSE                 # MIT 许可证
+├── README.md               # 本文件
+├── .vscode/                # VS Code 配置（任务）
+│   └── tasks.json
+├── src/                    # 源代码目录
+│   ├── ledShow.csproj      # 项目文件
+│   ├── Program.cs          # 入口点
+│   ├── Config.cs           # 配置文件读写
+│   ├── Form1.cs            # 核心代码：字段、构造函数、窗体/LED 字体/Logo 初始化
+│   ├── Form1.Clock.cs      # 模拟时钟绘制（表盘、指针）
+│   ├── Form1.Scrolling.cs  # 滚动字幕 + 倒计时逻辑 + 主渲染方法
+│   ├── Form1.Public.cs     # 公开 API（字幕更新、Logo、倒计时控制等）
+│   ├── Form1.Designer.cs   # 窗体设计器代码
+│   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器
+│   └── Resources/          # 资源文件
+│       └── DSEG14Classic-Regular.ttf  # LED 等宽字体
+├── bin/                    # 构建输出（已 gitignore）
+└── obj/                    # 临时编译文件（已 gitignore）
+```
 
 ## 网页控制
 
@@ -78,14 +90,16 @@
 ### 构建
 
 ```bash
-dotnet build ledShow
+dotnet build src\ledShow.csproj
 ```
 
 ### 运行
 
 ```bash
-dotnet run --project ledShow
+dotnet run --project src\ledShow.csproj
 ```
+
+或使用 VS Code 任务：`Ctrl+Shift+B` → **Build LED Display** / **Run LED Display**
 
 ### 配置文件
 

@@ -8,7 +8,7 @@
 			"args": [
 				"run",
 				"--project",
-				"ledShow"
+				"src\\ledShow.csproj"
 			],
 			"group": "build"
 		},
@@ -18,7 +18,7 @@
 			"command": "dotnet",
 			"args": [
 				"build",
-				"ledShow"
+				"src\\ledShow.csproj"
 			],
 			"group": "build"
 		},
@@ -28,17 +28,7 @@
 			"command": "dotnet",
 			"args": [
 				"build",
-				"ledShow"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Build LED Display",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"build",
-				"ledShow"
+				"src\\ledShow.csproj"
 			],
 			"group": "build"
 		}
