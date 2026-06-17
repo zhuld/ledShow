@@ -31,6 +31,9 @@
     <Compile Include="Config.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Form1.cs" />
+    <Compile Include="Form1.Clock.cs" />
+    <Compile Include="Form1.Scrolling.cs" />
+    <Compile Include="Form1.Public.cs" />
     <Compile Include="Form1.Designer.cs" />
     <Compile Include="WebControlServer.cs" />
   </ItemGroup>
