@@ -1,4 +1,4 @@
 {
     "dotnet.preferCSharpExtension": true,
-    "dotnet-watch.restartOnFileChange": true
+    "editor.formatOnSave": true,
 }
