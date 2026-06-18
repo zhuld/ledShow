@@ -11,7 +11,7 @@ namespace ledShow
 
     public partial class Form1 : Form
     {
-    
+
         // ── 控件 ──
         private PictureBox logoBox = null;
 
@@ -66,70 +66,70 @@ namespace ledShow
             InitMarquee();
         }
 
-    // ═══════════════════════════════════════════
-    //  加载 LED 字体
-    // ═══════════════════════════════════════════
-    private void LoadFont()
-    {
-        try
+        // ═══════════════════════════════════════════
+        //  加载 LED 字体
+        // ═══════════════════════════════════════════
+        private void LoadFont()
         {
-            string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
-            string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DigitalNumbers-Regular.ttf");
-            if (File.Exists(fontPath))
+            try
             {
-                _fontCollection = new System.Drawing.Text.PrivateFontCollection();
-                _fontCollection.AddFontFile(fontPath);
-                if (_fontCollection.Families.Length > 0)
-                    _countdownFontFamily = _fontCollection.Families[0];
+                string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
+                string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DigitalNumbers-Regular.ttf");
+                if (File.Exists(fontPath))
+                {
+                    _fontCollection = new System.Drawing.Text.PrivateFontCollection();
+                    _fontCollection.AddFontFile(fontPath);
+                    if (_fontCollection.Families.Length > 0)
+                        _countdownFontFamily = _fontCollection.Families[0];
+                }
+            }
+            catch
+            {
+                // 字体加载失败则使用系统默认字体
             }
         }
-        catch
+
+        // ═══════════════════════════════════════════
+        //  窗体初始化
+        // ═══════════════════════════════════════════
+        private void InitForm()
         {
-            // 字体加载失败则使用系统默认字体
+            Width = formWidth;
+            Height = formHeight;
+            FormBorderStyle = FormBorderStyle.None;
+            BackColor = Color.Black;
+            Location = new Point(0, 0);
+            StartPosition = FormStartPosition.Manual;
+            TopMost = true;
+            DoubleBuffered = true;
+
         }
-    }
 
-    // ═══════════════════════════════════════════
-    //  窗体初始化
-    // ═══════════════════════════════════════════
-    private void InitForm()
-    {
-        Width = formWidth;
-        Height = formHeight;
-        FormBorderStyle = FormBorderStyle.None;
-        BackColor = Color.Black;
-        Location = new Point(0, 0);
-        StartPosition = FormStartPosition.Manual;
-        TopMost = true;
-        DoubleBuffered = true;
-
-    }
-
-    // ═══════════════════════════════════════════
-    //  Logo 区（左侧，可选）
-    // ═══════════════════════════════════════════
-    private void InitLogo()
-    {
-        // 仅在配置了 Logo 路径时才创建 Logo 控件
-        if (!string.IsNullOrEmpty(config.LogoPath))
+        // ═══════════════════════════════════════════
+        //  Logo 区（左侧，可选）
+        // ═══════════════════════════════════════════
+        private void InitLogo()
         {
-            int logoSize = Math.Min(formHeight - 20, 200);
-            logoBox = new PictureBox
+            // 仅在配置了 Logo 路径时才创建 Logo 控件
+            if (!string.IsNullOrEmpty(config.LogoPath))
             {
-                Location = new Point(10, (formHeight - logoSize) / 2),
-                Size = new Size(logoSize, logoSize),
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.Black,
-            };
-            Controls.Add(logoBox);
-            SetLogo(config.LogoPath);
+                int logoSize = Math.Min(formHeight - 20, 200);
+                logoBox = new PictureBox
+                {
+                    Location = new Point(10, (formHeight - logoSize) / 2),
+                    Size = new Size(logoSize, logoSize),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    BackColor = Color.Black,
+                };
+                Controls.Add(logoBox);
+                SetLogo(config.LogoPath);
+            }
         }
     }
-}
 
-// 额外的委托定义
-public delegate void CountdownStartDelegate(int seconds);
-public delegate string StringReturnDelegate();
+    // 额外的委托定义
+    public delegate void CountdownStartDelegate(int seconds);
+    public delegate string StringReturnDelegate();
 }
 
 // 额外的委托定义
