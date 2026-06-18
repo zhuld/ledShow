@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Run LED Display",
+			"label": "Run LEDCountDown",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -13,27 +13,7 @@
 			"group": "build"
 		},
 		{
-			"label": "Build LED Display",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"build",
-				"src\\ledShow.csproj"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Build LED Display",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"build",
-				"src\\ledShow.csproj"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Build LED Display",
+			"label": "Build LEDCountDown",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [

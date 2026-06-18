@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Windows.Forms;
 
-namespace ledShow
+namespace LEDCountDown
 {
     public partial class Form1
     {

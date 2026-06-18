@@ -1,6 +1,6 @@
-# LED 显示程序
+# LEDCountDown
 
-一个 Windows 下的无边框 LED 显示程序，适用于信息大屏、倒计时、会议提醒等场景。
+一个 Windows 下的无边框 LED 倒计时显示程序，适用于信息大屏、倒计时、会议提醒等场景。
 
 ## 功能
 
@@ -14,14 +14,14 @@
 ## 项目结构
 
 ```
-ledShow/
+LEDCountDown/
 ├── .gitignore              # Git 忽略规则
 ├── LICENSE                 # MIT 许可证
 ├── README.md               # 本文件
 ├── .vscode/                # VS Code 配置（任务）
 │   └── tasks.json
 ├── src/                    # 源代码目录
-│   ├── ledShow.csproj      # 项目文件
+│   ├── LEDCountDown.csproj # 项目文件
 │   ├── Program.cs          # 入口点
 │   ├── Config.cs           # 配置文件读写
 │   ├── Form1.cs            # 核心代码：字段、构造函数、窗体/LED 字体/Logo 初始化
@@ -105,13 +105,13 @@ ledShow/
 ### 构建
 
 ```bash
-dotnet build src\ledShow.csproj
+dotnet build src\LEDCountDown.csproj
 ```
 
 ### 运行
 
 ```bash
-dotnet run --project src\ledShow.csproj
+dotnet run --project src\LEDCountDown.csproj
 ```
 
 或使用 VS Code 任务：`Ctrl+Shift+B` → **Build LED Display** / **Run LED Display**

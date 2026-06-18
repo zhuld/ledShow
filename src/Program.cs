@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace ledShow
+namespace LEDCountDown
 {
     static class Program
     {

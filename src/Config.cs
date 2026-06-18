@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace ledShow
+namespace LEDCountDown
 {
     /// <summary>
     /// LED 显示程序配置文件，读写 config.json

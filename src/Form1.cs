@@ -4,7 +4,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Windows.Forms;
 
-namespace ledShow
+namespace LEDCountDown
 {
     // 用于线程安全调用的委托
     public delegate void StringArgDelegate(string text);

@@ -1,4 +1,4 @@
-﻿namespace ledShow
+﻿namespace LEDCountDown
 {
     partial class Form1
     {
