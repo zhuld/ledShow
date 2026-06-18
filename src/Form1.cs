@@ -41,6 +41,9 @@ namespace ledShow
         private System.Drawing.Text.PrivateFontCollection _fontCollection = null;
         private FontFamily _countdownFontFamily = null;
 
+        // ── 时钟样式 ──
+        private int _clockFaceIndex;
+
         // ── 时钟 ──
 
         private readonly int formWidth;
@@ -53,6 +56,7 @@ namespace ledShow
             formWidth = config.Width;
             formHeight = config.Height;
             marqueeText = config.MarqueeText;
+            _clockFaceIndex = config.ClockFace;
             InitializeComponent();
             LoadFont();
             InitForm();

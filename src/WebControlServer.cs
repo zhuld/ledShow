@@ -119,6 +119,18 @@ input[type=""file""] {
     <button class=""btn btn-secondary"" onclick=""loadConfig()"">刷新</button>
   </div>
 
+  <div class=""section-title"">钟面样式</div>
+  <div class=""form-group"">
+    <label for=""clockFace"">选择钟面</label>
+    <select id=""clockFace"" onchange=""setClockFace()"">
+      <option value=""0"">🔵 经典蓝</option>
+      <option value=""1"">⚪ 极简白</option>
+      <option value=""2"">🟠 复古琥珀</option>
+      <option value=""3"">🟢 霓虹青</option>
+      <option value=""4"">🟡 暗金</option>
+    </select>
+  </div>
+
   <div class=""section-title"">倒计时</div>
   <div class=""grid-2"">
     <div class=""form-group"">
@@ -171,7 +183,17 @@ async function loadConfig() {
     document.getElementById('marqueeText').value = cfg.marqueeText || '';
     document.getElementById('width').value = cfg.width || 1500;
     document.getElementById('height').value = cfg.height || 190;
+    document.getElementById('clockFace').value = cfg.clockFace || 0;
   } catch(e) { showStatus('加载配置失败', 'error'); }
+}
+
+async function setClockFace() {
+  const idx = parseInt(document.getElementById('clockFace').value);
+  try {
+    const r = await api('POST', '/api/clockface', { index: idx });
+    if (r.success) showStatus('钟面已切换', 'success');
+    else showStatus(r.error || '切换失败', 'error');
+  } catch(e) { showStatus('请求失败: ' + e.message, 'error'); }
 }
 
 async function updateMarquee() {
@@ -345,6 +367,9 @@ loadConfig();
                     case "/api/countdown/reset":
                         HandleCountdownResetApi(response);
                         break;
+                    case "/api/clockface":
+                        HandleClockFaceApi(request, response);
+                        break;
                     case "/api/restart":
                         HandleRestartApi(response);
                         break;
@@ -385,10 +410,12 @@ loadConfig();
                     int w = ParseJsonInt(body, "width");
                     int h = ParseJsonInt(body, "height");
                     string t = ParseJsonString(body, "marqueeText");
+                    string cfStr = ExtractValue(body, "clockFace");
 
                     if (w > 0) _config.Width = w;
                     if (h > 0) _config.Height = h;
                     if (t != null) _config.MarqueeText = t;
+                    if (cfStr != null) { int cf = int.Parse(cfStr); if (cf >= 0 && cf <= 4) { _config.ClockFace = cf; _form.SetClockFace(cf); } }
 
                     _config.Save();
 
@@ -517,11 +544,27 @@ loadConfig();
             ServeJson(resp, "{\"success\":true}");
         }
 
+        private void HandleClockFaceApi(HttpListenerRequest req, HttpListenerResponse resp)
+        {
+            string body = ReadBody(req);
+            int index = ParseJsonInt(body, "index");
+            if (index < 0 || index > 4)
+            {
+                ServeJson(resp, "{\"success\":false,\"error\":\"无效的钟面索引 (0-4)\"}");
+                return;
+            }
+            _config.ClockFace = index;
+            _config.Save();
+            _form.SetClockFace(index);
+            ServeJson(resp, "{\"success\":true}");
+        }
+
         private void HandleStatusApi(HttpListenerResponse resp)
         {
             string json = "{\"running\":true,\"marqueeText\":" +
                 EscapeJson(_config.MarqueeText) + ",\"width\":" +
                 _config.Width + ",\"height\":" + _config.Height +
+                ",\"clockFace\":" + _config.ClockFace +
                 ",\"countdown\":" + _form.GetCountdownStatus() + "}";
             ServeJson(resp, json);
         }

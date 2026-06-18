@@ -9,6 +9,27 @@ namespace ledShow
     public partial class Form1
     {
         // ═══════════════════════════════════════════
+        //  公开方法：钟面样式
+        // ═══════════════════════════════════════════
+
+        /// <summary>切换钟面样式（线程安全）</summary>
+        public void SetClockFace(int index)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => SetClockFace(index)));
+                return;
+            }
+
+            if (index < 0 || index > 4) return;
+            _clockFaceIndex = index;
+            Invalidate();
+        }
+
+        /// <summary>获取当前钟面样式索引</summary>
+        public int GetClockFace() { return _clockFaceIndex; }
+
+        // ═══════════════════════════════════════════
         //  公开方法：更换 Logo
         // ═══════════════════════════════════════════
         public void SetLogo(string imagePath)

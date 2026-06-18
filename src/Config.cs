@@ -14,6 +14,7 @@ namespace ledShow
         public int WebPort { get; set; }
         public string MarqueeText { get; set; }
         public string LogoPath { get; set; }
+        public int ClockFace { get; set; }
 
         /// <summary>配置文件路径（与 exe 同目录）</summary>
         private static string ConfigPath
@@ -38,6 +39,7 @@ namespace ledShow
             WebPort = DEFAULT_WEBPORT;
             MarqueeText = DEFAULT_MARQUEE;
             LogoPath = "";
+            ClockFace = 0;
         }
 
         /// <summary>
@@ -91,7 +93,8 @@ namespace ledShow
             sb.AppendLine("  \"height\": " + Height + ",");
             sb.AppendLine("  \"webPort\": " + WebPort + ",");
             sb.AppendLine("  \"marqueeText\": " + EncodeString(MarqueeText) + ",");
-            sb.AppendLine("  \"logoPath\": " + EncodeString(LogoPath));
+            sb.AppendLine("  \"logoPath\": " + EncodeString(LogoPath) + ",");
+            sb.AppendLine("  \"clockFace\": " + ClockFace);
             sb.AppendLine("}");
             return sb.ToString();
         }
@@ -103,6 +106,7 @@ namespace ledShow
             WebPort = ParseInt(json, "webPort", DEFAULT_WEBPORT);
             MarqueeText = ParseString(json, "marqueeText", DEFAULT_MARQUEE);
             LogoPath = ParseString(json, "logoPath", "");
+            ClockFace = ParseInt(json, "clockFace", 0);
         }
 
         private static int ParseInt(string json, string key, int defaultValue)

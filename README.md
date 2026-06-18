@@ -64,6 +64,7 @@ ledShow/
 | POST | `/api/logo/clear` | 清除 Logo |
 | POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时（分秒） |
 | POST | `/api/countdown/reset` | 重置倒计时 |
+| POST | `/api/clockface` | `{"index":N}` 切换钟面样式 (0-4) |
 | POST | `/api/restart` | 重启程序 |
 | POST | `/api/exit` | 退出程序 |
 | GET | `/api/status` | 获取运行状态 |
@@ -77,6 +78,18 @@ ledShow/
   "webPort": 8080
 }
 ```
+
+## 钟面样式
+
+网页控制面板可选择 5 种钟面配色：
+
+| 索引 | 名称 | 风格 |
+|------|------|------|
+| 0 | 🔵 经典蓝 | 蓝光科技风（默认） |
+| 1 | ⚪ 极简白 | 简洁白灰 |
+| 2 | 🟠 复古琥珀 | 琥珀/磷光单色 |
+| 3 | 🟢 霓虹青 | 青蓝霓虹赛博风 |
+| 4 | 🟡 暗金 | 奢华金棕 |
 
 ## 倒计时
 
