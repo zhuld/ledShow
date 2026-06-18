@@ -8,7 +8,7 @@
 			"args": [
 				"run",
 				"--project",
-				"src\\ledShow.csproj"
+				"src\\LEDCountDown.csproj"
 			],
 			"group": "build"
 		},
@@ -18,7 +18,19 @@
 			"command": "dotnet",
 			"args": [
 				"build",
-				"src\\ledShow.csproj"
+				"src\\LEDCountDown.csproj"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build LEDCountDown (Release)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Release",
+				"src\\LEDCountDown.csproj"
 			],
 			"group": "build"
 		}
