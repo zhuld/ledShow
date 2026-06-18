@@ -69,7 +69,7 @@ namespace ledShow
         try
         {
             string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
-            string fontPath = Path.Combine(exeDir, "DSEG14Classic-Regular.ttf");
+            string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DSEG14Classic-Regular.ttf");
             if (File.Exists(fontPath))
             {
                 _fontCollection = new System.Drawing.Text.PrivateFontCollection();
@@ -130,7 +130,7 @@ namespace ledShow
         if (pb == null || pb.Image != null) return;
 
         e.Graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-        using (var font = new Font("Arial", 20, FontStyle.Bold))
+        using (var font = new Font("Arial", 20, FontStyle.Regular))
         using (var brush = new SolidBrush(Color.DimGray))
         {
             var sz = e.Graphics.MeasureString("LOGO", font);

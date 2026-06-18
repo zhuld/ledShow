@@ -62,7 +62,7 @@ ledShow/
 | POST | `/api/marquee` | `{"text":"..."}` 更新字幕 |
 | POST | `/api/logo` | 上传 Logo 图片 |
 | POST | `/api/logo/clear` | 清除 Logo |
-| POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时 |
+| POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时（分秒） |
 | POST | `/api/countdown/reset` | 重置倒计时 |
 | POST | `/api/restart` | 重启程序 |
 | POST | `/api/exit` | 退出程序 |
@@ -80,7 +80,7 @@ ledShow/
 
 ## 倒计时
 
-- **显示格式**：`HH:MM:SS`，使用 DSEG14 LED 等宽字体
+- **显示格式**：`MM:SS`，使用 DSEG14 LED 等宽字体
 - **颜色变化**：> 5 分钟绿色 → 1~5 分钟橙色 → ≤ 1 分钟红色
 - **1 分钟提醒**：到达 1 分钟时系统提示音 + 金色文字闪烁 2 秒
 - **结束后**：立即恢复滚动字幕

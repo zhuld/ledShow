@@ -21,16 +21,6 @@
 				"src\\ledShow.csproj"
 			],
 			"group": "build"
-		},
-		{
-			"label": "Build LED Display",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"build",
-				"src\\ledShow.csproj"
-			],
-			"group": "build"
 		}
 	]
 }

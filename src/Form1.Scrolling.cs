@@ -13,7 +13,7 @@ namespace ledShow
         private void InitMarquee()
         {
             int fontSize = (int)(formHeight * 0.8f);
-            marqueeFont = new Font("微软雅黑", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+            marqueeFont = new Font("微软雅黑", fontSize, FontStyle.Regular, GraphicsUnit.Pixel);
             using (var tmpG = CreateGraphics())
             {
                 marqueeTextWidth = tmpG.MeasureString(marqueeText, marqueeFont).Width;
@@ -87,8 +87,11 @@ namespace ledShow
         private void FormPaint(object sender, PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.TextRenderingHint = TextRenderingHint.AntiAlias;
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             // 字幕区域：logo 右侧 ~ logoBox.Right+15  到时钟区域左侧-15
             float marqueeLeft = logoBox.Right + 15;
@@ -108,7 +111,7 @@ namespace ledShow
                     if (!string.IsNullOrEmpty(_notificationMsg) && Environment.TickCount < _notificationEndTick)
                     {
                         int fontSize = (int)(formHeight * 0.7f);
-                        using (var font = new Font("微软雅黑", fontSize, FontStyle.Bold, GraphicsUnit.Pixel))
+                        using (var font = new Font("微软雅黑", fontSize, FontStyle.Regular, GraphicsUnit.Pixel))
                         using (var brush = new SolidBrush(Color.Gold))
                         {
                             g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
@@ -126,10 +129,9 @@ namespace ledShow
                     }
 
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
-                    int h = totalSecs / 3600;
-                    int m = (totalSecs % 3600) / 60;
+                    int m = totalSecs / 60;
                     int s = totalSecs % 60;
-                    displayText = string.Format("{0:D2}:{1:D2}:{2:D2}", h, m, s);
+                    displayText = string.Format("{0:D2}:{1:D2}", m, s);
                     if (totalSecs <= 60)
                         textColor = Color.Red;
                     else if (totalSecs <= 300)
@@ -145,8 +147,8 @@ namespace ledShow
 
                 int fontSize2 = (int)(formHeight * 0.63f);
                 using (var font = _countdownFontFamily != null
-                    ? new Font(_countdownFontFamily, fontSize2, FontStyle.Bold, GraphicsUnit.Pixel)
-                    : new Font("Consolas", fontSize2, FontStyle.Bold, GraphicsUnit.Pixel))
+                    ? new Font(_countdownFontFamily, fontSize2, FontStyle.Regular, GraphicsUnit.Pixel)
+                    : new Font("Consolas", fontSize2, FontStyle.Regular, GraphicsUnit.Pixel))
                 using (var brush = new SolidBrush(textColor))
                 {
                     g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
@@ -163,12 +165,12 @@ namespace ledShow
             // 设置裁剪区域，使文字仅在 Logo 和时钟之间的区域可见
             g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
 
-            // 用渐变颜色绘制文字
+            // 用渐变颜色绘制文字（上下渐变，下面深红）
             using (var brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-                new PointF(marqueeLeft, 0),
-                new PointF(marqueeRight, 0),
-                Color.Lime,
-                Color.Cyan))
+                new PointF(0, 0),
+                new PointF(0, Height),
+                Color.Red,
+                Color.DarkRed))
             {
                 if (marqueeNeedsScroll)
                 {

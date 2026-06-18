@@ -46,7 +46,7 @@ namespace ledShow
                 marqueeFont.Dispose();
             }
             int fontSize = (int)(formHeight * 0.8f);
-            marqueeFont = new Font("微软雅黑", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
+            marqueeFont = new Font("微软雅黑", fontSize, FontStyle.Regular, GraphicsUnit.Pixel);
             using (var tmpG = CreateGraphics())
             {
                 marqueeTextWidth = tmpG.MeasureString(marqueeText, marqueeFont).Width;

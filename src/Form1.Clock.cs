@@ -27,105 +27,120 @@ namespace ledShow
 
         private void Form_ClockPaint(object sender, PaintEventArgs e)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = TextRenderingHint.AntiAlias;
-
+            // ════════════════════════════════════════════════
+            //  2x 超采样抗锯齿：先渲染到 2x 位图，再缩放到正常尺寸
+            // ════════════════════════════════════════════════
             float cx = clockAreaLeft + clockAreaSize / 2f;
             float cy = (formHeight - clockAreaSize) / 2f + clockAreaSize / 2f;
             float r = (clockAreaSize - 6) / 2f;
 
-            // ── 外圈光晕 ──
-            using (var glowPen = new Pen(Color.FromArgb(30, 100, 180, 255), 12))
+            using (var bmp = new Bitmap(clockAreaSize * 2, clockAreaSize * 2))
+            using (var bg = Graphics.FromImage(bmp))
             {
-                g.DrawEllipse(glowPen, cx - r - 4, cy - r - 4, (r + 4) * 2, (r + 4) * 2);
-            }
+                bg.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                bg.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                bg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                bg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                bg.TextRenderingHint = TextRenderingHint.AntiAlias;
 
-            // ── 表盘底色 ──
-            using (var faceBrush = new SolidBrush(Color.FromArgb(20, 20, 35)))
-            {
-                g.FillEllipse(faceBrush, cx - r, cy - r, r * 2, r * 2);
-            }
+                float cx2 = clockAreaSize;
+                float cy2 = clockAreaSize;
+                float r2 = r * 2;
 
-            // ── 外圈边框 ──
-            using (var outlinePen = new Pen(Color.FromArgb(80, 140, 220), 2.5f))
-            {
-                g.DrawEllipse(outlinePen, cx - r, cy - r, r * 2, r * 2);
-            }
-
-            // ── 内圈装饰 ──
-            using (var innerPen = new Pen(Color.FromArgb(40, 100, 180), 1))
-            {
-                g.DrawEllipse(innerPen, cx - r + 8, cy - r + 8, (r - 8) * 2, (r - 8) * 2);
-            }
-
-            // ── 刻度 & 阿拉伯数字 1~12 ──
-            for (int i = 0; i < 12; i++)
-            {
-                double angle = i * 30 - 90;
-                double rad = angle * Math.PI / 180;
-
-                float outerX = cx + (float)(r * Math.Cos(rad));
-                float outerY = cy + (float)(r * Math.Sin(rad));
-
-                bool isHour = i % 3 == 0;
-                float innerR = isHour ? r - 14 : r - 8;
-                float innerX = cx + (float)(innerR * Math.Cos(rad));
-                float innerY = cy + (float)(innerR * Math.Sin(rad));
-
-                using (var tickPen = new Pen(isHour ? Color.FromArgb(180, 220, 255) : Color.FromArgb(80, 120, 160),
-                                            isHour ? 3 : 1.5f))
+                // ── 外圈光晕 ──
+                using (var glowPen = new Pen(Color.FromArgb(30, 100, 180, 255), 24))
                 {
-                    g.DrawLine(tickPen, innerX, innerY, outerX, outerY);
+                    bg.DrawEllipse(glowPen, cx2 - r2 - 8, cy2 - r2 - 8, (r2 + 8) * 2, (r2 + 8) * 2);
                 }
 
-                // 阿拉伯数字 1~12
-                float numR = r - 22;
-                float numX = cx + (float)(numR * Math.Cos(rad));
-                float numY = cy + (float)(numR * Math.Sin(rad));
-                string num = (i == 0 ? 12 : i).ToString();
-                using (var numFont = new Font("Arial", 10, FontStyle.Bold))
-                using (var numBrush = new SolidBrush(Color.FromArgb(160, 200, 240)))
+                // ── 表盘底色 ──
+                using (var faceBrush = new SolidBrush(Color.FromArgb(20, 20, 35)))
                 {
-                    var sz = g.MeasureString(num, numFont);
-                    g.DrawString(num, numFont, numBrush, numX - sz.Width / 2, numY - sz.Height / 2);
+                    bg.FillEllipse(faceBrush, cx2 - r2, cy2 - r2, r2 * 2, r2 * 2);
                 }
-            }
 
-            // ── 实时时间 ──
-            DateTime now = DateTime.Now;
-            double sec = now.Second + now.Millisecond / 1000.0;
-            double min = now.Minute + sec / 60.0;
-            double hour = (now.Hour % 12) + min / 60.0;
+                // ── 外圈边框 ──
+                using (var outlinePen = new Pen(Color.FromArgb(80, 140, 220), 5))
+                {
+                    bg.DrawEllipse(outlinePen, cx2 - r2, cy2 - r2, r2 * 2, r2 * 2);
+                }
 
-            // ── 时针（多边形形状）──
-            float hAngle = (float)(hour * 30 - 90);
-            DrawHandShape(g, cx, cy, hAngle, r * 0.4f, 5, 2, Color.FromArgb(200, 230, 255));
+                // ── 内圈装饰 ──
+                using (var innerPen = new Pen(Color.FromArgb(40, 100, 180), 2))
+                {
+                    bg.DrawEllipse(innerPen, cx2 - r2 + 16, cy2 - r2 + 16, (r2 - 16) * 2, (r2 - 16) * 2);
+                }
 
-            // ── 分针 ──
-            float mAngle = (float)(min * 6 - 90);
-            DrawHandShape(g, cx, cy, mAngle, r * 0.6f, 3.5f, 1.5f, Color.FromArgb(140, 200, 255));
+                // ── 刻度 & 阿拉伯数字 1~12 ──
+                for (int i = 0; i < 12; i++)
+                {
+                    double angle = i * 30 - 90;
+                    double rad = angle * Math.PI / 180;
 
-            // ── 秒针（带反向尾针）──
-            float sAngle = (float)(sec * 6 - 90);
-            double sRad = sAngle * Math.PI / 180;
-            float sEndX = cx + (float)(r * 0.72f * Math.Cos(sRad));
-            float sEndY = cy + (float)(r * 0.72f * Math.Sin(sRad));
-            float sTailX = cx - (float)(r * 0.18f * Math.Cos(sRad));
-            float sTailY = cy - (float)(r * 0.18f * Math.Sin(sRad));
-            using (var secPen = new Pen(Color.OrangeRed, 1.5f) { EndCap = System.Drawing.Drawing2D.LineCap.Round })
-            {
-                g.DrawLine(secPen, sTailX, sTailY, sEndX, sEndY);
-            }
+                    float outerX = cx2 + (float)(r2 * Math.Cos(rad));
+                    float outerY = cy2 + (float)(r2 * Math.Sin(rad));
 
-            // ── 中心圆点（双层）──
-            using (var centerBrush = new SolidBrush(Color.FromArgb(100, 180, 255)))
-            {
-                g.FillEllipse(centerBrush, cx - 5, cy - 5, 10, 10);
-            }
-            using (var centerBrush2 = new SolidBrush(Color.FromArgb(200, 230, 255)))
-            {
-                g.FillEllipse(centerBrush2, cx - 2.5f, cy - 2.5f, 5, 5);
+                    bool isHour = i % 3 == 0;
+                    float innerR = isHour ? r2 - 28 : r2 - 16;
+                    float innerX = cx2 + (float)(innerR * Math.Cos(rad));
+                    float innerY = cy2 + (float)(innerR * Math.Sin(rad));
+
+                    using (var tickPen = new Pen(isHour ? Color.FromArgb(180, 220, 255) : Color.FromArgb(80, 120, 160),
+                                                isHour ? 6 : 3))
+                    {
+                        bg.DrawLine(tickPen, innerX, innerY, outerX, outerY);
+                    }
+
+                    // 阿拉伯数字 1~12
+                    float numR = r2 - 44;
+                    float numX = cx2 + (float)(numR * Math.Cos(rad));
+                    float numY = cy2 + (float)(numR * Math.Sin(rad));
+                    string num = (i == 0 ? 12 : i).ToString();
+                    using (var numFont = new Font("Arial", 20, FontStyle.Regular))
+                    using (var numBrush = new SolidBrush(Color.FromArgb(160, 200, 240)))
+                    {
+                        var sz = bg.MeasureString(num, numFont);
+                        bg.DrawString(num, numFont, numBrush, numX - sz.Width / 2, numY - sz.Height / 2);
+                    }
+                }
+
+                // ── 实时时间 ──
+                DateTime now = DateTime.Now;
+                double sec = now.Second + now.Millisecond / 1000.0;
+                double min = now.Minute + sec / 60.0;
+                double hour = (now.Hour % 12) + min / 60.0;
+
+                // ── 时针 ──
+                float hAngle = (float)(hour * 30 - 90);
+                DrawHandShape(bg, cx2, cy2, hAngle, r2 * 0.4f, 10, 4, Color.FromArgb(200, 230, 255));
+
+                // ── 分针 ──
+                float mAngle = (float)(min * 6 - 90);
+                DrawHandShape(bg, cx2, cy2, mAngle, r2 * 0.6f, 7, 3, Color.FromArgb(140, 200, 255));
+
+                // ── 秒针 ──
+                float sAngle = (float)(sec * 6 - 90);
+                DrawHandShape(bg, cx2, cy2, sAngle, r2 * 0.72f, 5, 1, Color.OrangeRed);
+
+                // ── 秒针尾针 ──
+                DrawHandShape(bg, cx2, cy2, sAngle + 180, r2 * 0.18f, 4, 0, Color.FromArgb(120, Color.OrangeRed));
+
+                // ── 中心圆点（双层）──
+                using (var centerBrush = new SolidBrush(Color.FromArgb(100, 180, 255)))
+                {
+                    bg.FillEllipse(centerBrush, cx2 - 10, cy2 - 10, 20, 20);
+                }
+                using (var centerBrush2 = new SolidBrush(Color.FromArgb(200, 230, 255)))
+                {
+                    bg.FillEllipse(centerBrush2, cx2 - 5, cy2 - 5, 10, 10);
+                }
+
+                // ── 将 2x 位图绘制到屏幕（缩放为原始尺寸）──
+                var g = e.Graphics;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                float drawX = clockAreaLeft;
+                float drawY = (formHeight - clockAreaSize) / 2f;
+                g.DrawImage(bmp, drawX, drawY, clockAreaSize, clockAreaSize);
             }
         }
 

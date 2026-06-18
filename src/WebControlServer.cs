@@ -74,6 +74,7 @@ input[type=""file""] {
   border-bottom:1px solid #21262d;
 }
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 @media(max-width:480px){ .grid-2 { grid-template-columns:1fr; } .grid-3 { grid-template-columns:1fr; } }
 .server-info { text-align:center; font-size:12px; color:#484f58; margin-top:24px; }
@@ -119,11 +120,7 @@ input[type=""file""] {
   </div>
 
   <div class=""section-title"">倒计时</div>
-  <div class=""grid-3"">
-    <div class=""form-group"">
-      <label for=""cdHour"">时</label>
-      <input type=""text"" id=""cdHour"" placeholder=""0"" value=""0"">
-    </div>
+  <div class=""grid-2"">
     <div class=""form-group"">
       <label for=""cdMin"">分</label>
       <input type=""text"" id=""cdMin"" placeholder=""10"" value=""10"">
@@ -220,15 +217,14 @@ async function updateConfig() {
 }
 
 async function startCountdown() {
-  const h = parseInt(document.getElementById('cdHour').value) || 0;
   const m = parseInt(document.getElementById('cdMin').value) || 0;
   const s = parseInt(document.getElementById('cdSec').value) || 0;
-  const total = h * 3600 + m * 60 + s;
+  const total = m * 60 + s;
   if (total < 1) { showStatus('请输入有效的时间', 'error'); return; }
   try {
     const r = await api('POST', '/api/countdown/start', { seconds: total });
     if (r.success) {
-      showStatus('倒计时已开始: ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'), 'success');
+      showStatus('倒计时已开始: ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'), 'success');
     }
     else showStatus(r.error || '启动失败', 'error');
   } catch(e) { showStatus('请求失败: ' + e.message, 'error'); }
