@@ -58,13 +58,8 @@ namespace ledShow
                 {
                     _countdownRemainingSeconds = remaining;
 
-                    // ── 到达时间点提醒 ──
+                    // ── 到达时间点提醒（预留）──
                     int secs = (int)Math.Ceiling(remaining);
-                    if (!_reminded1Min && secs <= 60 && _countdownTotalSeconds > 60)
-                    {
-                        _reminded1Min = true;
-                        ShowNotification("还剩1分钟!");
-                    }
                 }
             }
 

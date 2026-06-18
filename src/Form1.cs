@@ -33,7 +33,6 @@ namespace ledShow
         private int _countdownTotalSeconds;
         private double _countdownRemainingSeconds;
         private int _countdownEndTick;          // Environment.TickCount 倒计时结束时刻
-        private bool _reminded1Min;             // 1 分钟提醒是否已触发
         private string _notificationMsg = "";   // 当前提醒文字
         private int _notificationEndTick;       // 提醒显示截止时刻
 
