@@ -182,6 +182,8 @@ namespace ledShow
 
             _countdownState = CountdownState.Idle;
             _countdownRemainingSeconds = 0;
+            _reminded1Min = false;
+            _countdownEndPlayed = false;
             _notificationMsg = "";
             Invalidate();
         }

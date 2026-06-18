@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Media;
 using System.Windows.Forms;
 
 namespace ledShow
@@ -56,6 +57,11 @@ namespace ledShow
                 double remaining = (_countdownEndTick - now) / 1000.0;
                 if (remaining <= 0)
                 {
+                    if (!_countdownEndPlayed)
+                    {
+                        _countdownEndPlayed = true;
+                        SystemSounds.Exclamation.Play();
+                    }
                     _countdownRemainingSeconds = 0;
                     _countdownState = CountdownState.Idle;  // 倒计时结束，立即恢复滚动字符
                 }
@@ -63,8 +69,13 @@ namespace ledShow
                 {
                     _countdownRemainingSeconds = remaining;
 
-                    // ── 到达时间点提醒（预留）──
+                    // ── 到达 1 分钟时播放提示音 ──
                     int secs = (int)Math.Ceiling(remaining);
+                    if (!_reminded1Min && secs <= 60 && _countdownTotalSeconds > 60)
+                    {
+                        _reminded1Min = true;
+                        SystemSounds.Beep.Play();
+                    }
                 }
             }
 
