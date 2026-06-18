@@ -60,10 +60,25 @@ namespace ledShow
         // ═══════════════════════════════════════════
         //  公开方法：更换 Logo
         // ═══════════════════════════════════════════
+        private void EnsureLogoBox()
+        {
+            if (logoBox != null) return;
+            int logoSize = Math.Min(formHeight - 20, 200);
+            logoBox = new PictureBox
+            {
+                Location = new Point(10, (formHeight - logoSize) / 2),
+                Size = new Size(logoSize, logoSize),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = Color.Black,
+            };
+            Controls.Add(logoBox);
+        }
+
         public void SetLogo(string imagePath)
         {
             if (File.Exists(imagePath))
             {
+                EnsureLogoBox();
                 logoBox.Image = Image.FromFile(imagePath);
                 logoBox.Invalidate();
             }
@@ -71,6 +86,7 @@ namespace ledShow
 
         public void SetLogo(Image image)
         {
+            EnsureLogoBox();
             logoBox.Image = image;
             logoBox.Invalidate();
         }
@@ -101,7 +117,7 @@ namespace ledShow
                 marqueeTextWidth = tmpG.MeasureString(marqueeText, marqueeFont).Width;
             }
 
-            float marqueeLeft = Math.Max(logoBox.Right + 15, 10);
+            float marqueeLeft = GetMarqueeLeft();
             float marqueeRight = clockAreaLeft - 15;
             float availableWidth = marqueeRight - marqueeLeft;
             marqueeNeedsScroll = marqueeTextWidth > availableWidth;
@@ -122,6 +138,8 @@ namespace ledShow
                 Invoke(new MethodInvoker(ClearLogo));
                 return;
             }
+
+            if (logoBox == null) return;
 
             if (logoBox.Image != null)
             {

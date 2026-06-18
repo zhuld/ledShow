@@ -10,6 +10,11 @@ namespace ledShow
         // ═══════════════════════════════════════════
         //  横向滚动字幕（中间）
         // ═══════════════════════════════════════════
+        private float GetMarqueeLeft()
+        {
+            return logoBox != null ? logoBox.Right + 15 : 10;
+        }
+
         private void InitMarquee()
         {
             int fontSize = (int)(formHeight * 0.8f);
@@ -20,7 +25,7 @@ namespace ledShow
             }
 
             // 计算可显示宽度
-            float marqueeLeft = Math.Max(logoBox.Right + 15, 10);
+            float marqueeLeft = GetMarqueeLeft();
             float marqueeRight = clockAreaLeft - 15;
             float availableWidth = marqueeRight - marqueeLeft;
 
@@ -88,8 +93,8 @@ namespace ledShow
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            // 字幕区域：logo 右侧 ~ logoBox.Right+15  到时钟区域左侧-15
-            float marqueeLeft = logoBox.Right + 15;
+            // 字幕区域：logo 右侧（无 logo 则从左侧 10px 起）到时钟区域左侧-15
+            float marqueeLeft = GetMarqueeLeft();
             float marqueeRight = clockAreaLeft - 15;
             float marqueeWidth = marqueeRight - marqueeLeft;
             float centerY = Height / 2f;

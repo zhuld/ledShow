@@ -104,41 +104,23 @@ namespace ledShow
     }
 
     // ═══════════════════════════════════════════
-    //  Logo 区（左侧，可更换）
+    //  Logo 区（左侧，可选）
     // ═══════════════════════════════════════════
     private void InitLogo()
     {
-        int logoSize = Math.Min(formHeight - 20, 200);
-        logoBox = new PictureBox
-        {
-            Location = new Point(10, (formHeight - logoSize) / 2),
-            Size = new Size(logoSize, logoSize),
-            SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.Black,
-        };
-        logoBox.Paint += LogoPlaceholderPaint;
-        Controls.Add(logoBox);
-
-        // 从配置加载 Logo
+        // 仅在配置了 Logo 路径时才创建 Logo 控件
         if (!string.IsNullOrEmpty(config.LogoPath))
         {
+            int logoSize = Math.Min(formHeight - 20, 200);
+            logoBox = new PictureBox
+            {
+                Location = new Point(10, (formHeight - logoSize) / 2),
+                Size = new Size(logoSize, logoSize),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = Color.Black,
+            };
+            Controls.Add(logoBox);
             SetLogo(config.LogoPath);
-        }
-    }
-
-    private void LogoPlaceholderPaint(object sender, PaintEventArgs e)
-    {
-        // 未设置图片时显示 "LOGO" 占位文字
-        var pb = sender as PictureBox;
-        if (pb == null || pb.Image != null) return;
-
-        e.Graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-        using (var font = new Font("Arial", 20, FontStyle.Regular))
-        using (var brush = new SolidBrush(Color.DimGray))
-        {
-            var sz = e.Graphics.MeasureString("LOGO", font);
-            var pt = new PointF((pb.Width - sz.Width) / 2, (pb.Height - sz.Height) / 2);
-            e.Graphics.DrawString("LOGO", font, brush, pt);
         }
     }
 }
