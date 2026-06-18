@@ -62,6 +62,7 @@ input[type=""file""] {
 .btn-primary { background:#238636; color:#fff; }
 .btn-danger { background:#da3633; color:#fff; }
 .btn-secondary { background:#21262d; color:#c9d1d9; border:1px solid #30363d; }
+.btn-success { background:#238636; color:#fff; border:1px solid #2ea043; }
 .status-bar {
   margin-top:20px; padding:10px 14px; border-radius:6px;
   font-size:13px; display:none; text-align:center;
@@ -151,6 +152,11 @@ input[type=""file""] {
   <div class=""btn-row"">
     <button class=""btn btn-secondary"" onclick=""restartApp()"">重启程序</button>
     <button class=""btn btn-danger"" onclick=""exitApp()"">退出程序</button>
+  </div>
+
+  <div class=""section-title"">开机自启</div>
+  <div class=""btn-row"">
+    <button class=""btn btn-primary"" id=""autoStartBtn"" onclick=""toggleAutoStart()"">加载中...</button>
   </div>
 
   <div id=""status"" class=""status-bar""></div>
@@ -265,12 +271,39 @@ async function restartApp() {
   try { await api('POST', '/api/restart'); } catch(e) {}
 }
 
+async function toggleAutoStart() {
+  const btn = document.getElementById('autoStartBtn');
+  const enable = btn.dataset.enabled === 'false';
+  try {
+    const r = await api('POST', '/api/autostart', { enable });
+    if (r.success) { btn.dataset.enabled = enable ? 'true' : 'false'; updateAutoStartBtn(); }
+    else showStatus(r.error || '操作失败', 'error');
+  } catch(e) { showStatus('请求失败: ' + e.message, 'error'); }
+}
+
+async function checkAutoStart() {
+  try {
+    const r = await api('GET', '/api/autostart');
+    const btn = document.getElementById('autoStartBtn');
+    btn.dataset.enabled = r.enabled ? 'true' : 'false';
+    updateAutoStartBtn();
+  } catch(e) {}
+}
+
+function updateAutoStartBtn() {
+  const btn = document.getElementById('autoStartBtn');
+  const enabled = btn.dataset.enabled === 'true';
+  btn.textContent = enabled ? '✅ 已开启开机自启（点击关闭）' : '⛔ 未开启开机自启（点击开启）';
+  btn.className = enabled ? 'btn btn-success' : 'btn btn-secondary';
+}
+
 async function exitApp() {
   if (!confirm('确定要退出程序吗？')) return;
   try { await api('POST', '/api/exit'); } catch(e) {}
 }
 
 loadConfig();
+checkAutoStart();
 </script>
 </body>
 </html>";
@@ -369,6 +402,9 @@ loadConfig();
                         break;
                     case "/api/clockface":
                         HandleClockFaceApi(request, response);
+                        break;
+                    case "/api/autostart":
+                        HandleAutoStartApi(request, response);
                         break;
                     case "/api/restart":
                         HandleRestartApi(response);
@@ -558,13 +594,28 @@ loadConfig();
             _form.SetClockFace(index);
             ServeJson(resp, "{\"success\":true}");
         }
-
+        private void HandleAutoStartApi(HttpListenerRequest req, HttpListenerResponse resp)
+        {
+            if (req.HttpMethod == "GET")
+            {
+                bool enabled = Form1.GetAutoStart();
+                ServeJson(resp, "{\"enabled\":" + (enabled ? "true" : "false") + "}");
+            }
+            else if (req.HttpMethod == "POST")
+            {
+                string body = ReadBody(req);
+                bool enable = ParseJsonBool(body, "enable");
+                Form1.SetAutoStart(enable);
+                ServeJson(resp, "{\"success\":true}");
+            }
+        }
         private void HandleStatusApi(HttpListenerResponse resp)
         {
             string json = "{\"running\":true,\"marqueeText\":" +
                 EscapeJson(_config.MarqueeText) + ",\"width\":" +
                 _config.Width + ",\"height\":" + _config.Height +
                 ",\"clockFace\":" + _config.ClockFace +
+                ",\"autoStart\":" + (Form1.GetAutoStart() ? "true" : "false") +
                 ",\"countdown\":" + _form.GetCountdownStatus() + "}";
             ServeJson(resp, json);
         }
@@ -711,6 +762,12 @@ loadConfig();
             int result;
             int.TryParse(val, out result);
             return result;
+        }
+
+        private static bool ParseJsonBool(string json, string key)
+        {
+            string val = ExtractValue(json, key);
+            return val != null && val.Trim().ToLower() == "true";
         }
 
         private static string ParseJsonString(string json, string key)

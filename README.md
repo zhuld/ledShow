@@ -68,6 +68,8 @@ ledShow/
 | POST | `/api/restart` | 重启程序 |
 | POST | `/api/exit` | 退出程序 |
 | GET | `/api/status` | 获取运行状态 |
+| GET | `/api/autostart` | 查询开机自启状态 |
+| POST | `/api/autostart` | `{"enable":true/false}` 设置/取消开机自启 |
 
 ### 端口配置
 

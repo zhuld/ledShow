@@ -8,6 +8,34 @@ namespace ledShow
 {
     public partial class Form1
     {
+        private const string AUTOSTART_KEY = "LED显示屏";
+
+        // ═══════════════════════════════════════════
+        //  公开方法：开机自启
+        // ═══════════════════════════════════════════
+
+        /// <summary>设置或取消开机自启</summary>
+        public static void SetAutoStart(bool enable)
+        {
+            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (enable)
+                    key.SetValue(AUTOSTART_KEY, Application.ExecutablePath);
+                else
+                    key.DeleteValue(AUTOSTART_KEY, false);
+            }
+        }
+
+        /// <summary>查询是否已设置开机自启</summary>
+        public static bool GetAutoStart()
+        {
+            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run"))
+            {
+                return key != null && key.GetValue(AUTOSTART_KEY) != null;
+            }
+        }
         // ═══════════════════════════════════════════
         //  公开方法：钟面样式
         // ═══════════════════════════════════════════
