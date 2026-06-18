@@ -31,7 +31,7 @@ ledShow/
 │   ├── Form1.Designer.cs   # 窗体设计器代码
 │   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器
 │   └── Resources/          # 资源文件
-│       └── DSEG14Classic-Regular.ttf  # LED 等宽字体
+│       └── DigitalNumbers-Regular.ttf  # LED 等宽字体
 ├── bin/                    # 构建输出（已 gitignore）
 └── obj/                    # 临时编译文件（已 gitignore）
 ```

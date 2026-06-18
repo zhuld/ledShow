@@ -73,7 +73,7 @@ namespace ledShow
         try
         {
             string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
-            string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DSEG14Classic-Regular.ttf");
+            string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DigitalNumbers-Regular.ttf");
             if (File.Exists(fontPath))
             {
                 _fontCollection = new System.Drawing.Text.PrivateFontCollection();
