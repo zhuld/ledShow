@@ -142,7 +142,7 @@ namespace LEDCountDown
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
                     int m = totalSecs / 60;
                     int s = totalSecs % 60;
-                    displayText = string.Format("{0:D2}:{1:D2}", m, s);
+                    displayText = string.Format("{0,2}:{1:D2}", m, s);
                     if (totalSecs <= 60)
                         textColor = Color.Red;
                     else if (totalSecs <= 300)
