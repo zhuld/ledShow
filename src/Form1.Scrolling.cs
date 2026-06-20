@@ -142,7 +142,8 @@ namespace LEDCountDown
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
                     int m = totalSecs / 60;
                     int s = totalSecs % 60;
-                    displayText = string.Format("{0,2}:{1:D2}", m, s);
+                    string colon = (Environment.TickCount / 500) % 2 == 0 ? " " : ":";
+                    displayText = string.Format("{0,2}" + colon + "{1:D2}", m, s);
                     if (totalSecs <= 60)
                         textColor = Color.Red;
                     else if (totalSecs <= 300)
@@ -162,12 +163,15 @@ namespace LEDCountDown
                     : new Font("Consolas", fontSize2, FontStyle.Regular, GraphicsUnit.Pixel))
                 using (var brush = new SolidBrush(textColor))
                 {
-                    g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
                     var sz = g.MeasureString(displayText, font);
                     float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
                     float cy = centerY - sz.Height / 2f;
+                    // 底层：半透明 88:88 占位符（20%透明度，冒号同步闪烁）
+                    string placeholderColon = (Environment.TickCount / 500) % 2 == 0 ? " " : ":";
+                    using (var dimBrush = new SolidBrush(Color.FromArgb(5, textColor)))
+                        g.DrawString("88:88", font, dimBrush, cx, cy);
+                    // 顶层：实际倒计时数字
                     g.DrawString(displayText, font, brush, cx, cy);
-                    g.ResetClip();
                 }
                 return;
             }
@@ -205,5 +209,6 @@ namespace LEDCountDown
             // 恢复裁剪区域
             g.ResetClip();
         }
+
     }
 }

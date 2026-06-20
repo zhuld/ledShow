@@ -189,6 +189,15 @@ namespace LEDCountDown
                 using (var cb2 = new SolidBrush(Color.FromArgb(255, 255, 255)))
                     bg.FillEllipse(cb2, cx2 - 5, cy2 - 5, 10, 10);
 
+                // AM / PM
+                string ampm = now.Hour < 12 ? "AM" : "PM";
+                using (var ampmFont = new Font("Arial", 18, FontStyle.Bold))
+                using (var ampmBrush = new SolidBrush(colors.NumColor))
+                {
+                    var sz = bg.MeasureString(ampm, ampmFont);
+                    bg.DrawString(ampm, ampmFont, ampmBrush, cx2 - sz.Width / 2, cy2 + 22);
+                }
+
                 // 绘制到屏幕
                 var g = e.Graphics;
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
