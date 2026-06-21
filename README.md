@@ -5,11 +5,14 @@
 ## 功能
 
 - **无边框窗口**（1500×190），黑色背景，置顶显示
-- **左侧 Logo**：支持图片显示（可配置路径）
-- **中间滚动字幕**：横向循环滚动 / 文字较短时自动居中
-- **右侧模拟时钟**：指针式时钟，阿拉伯数字 1~12，秒针连续平滑转动
-- **倒计时**：支持时分秒设置（网页默认 10 分钟），颜色随剩余时间变化，结束后立即恢复字幕
+- **左侧 Logo**：支持图片显示（可配置路径 / 网页上传）
+- **中间滚动字幕**：横向循环滚动 / 文字较短时自动居中，红色到深红垂直渐变色
+- **右侧模拟时钟**：指针式时钟，阿拉伯数字 1~12，秒针连续平滑转动，支持 5 种钟面配色
+- **倒计时**：支持时分秒设置（网页默认 10 分钟），使用 DSEG14 LED 等宽字体，颜色随剩余时间变化，结束后立即恢复字幕
 - **网页控制**：内置 HTTP 服务器，通过浏览器实时控制
+- **防息屏**：程序运行时阻止系统进入睡眠和关闭显示器，适合长时间信息展示
+- **命令行参数**：支持 `--width` 和 `--height` 参数覆盖窗口尺寸
+- **开机自启**：支持通过网页控制面板设置/取消开机自启
 
 ## 项目结构
 
@@ -33,6 +36,9 @@ LEDCountDown/
 │   └── Resources/          # 资源文件
 │       └── DigitalNumbers-Regular.ttf  # LED 等宽字体
 ├── bin/                    # 构建输出（已 gitignore）
+│   └── Debug/
+│       ├── logos/          # 网页上传的 Logo 图片（运行时创建）
+│       └── Resources/      # 资源文件（字体、图标）
 └── obj/                    # 临时编译文件（已 gitignore）
 ```
 
@@ -48,7 +54,9 @@ LEDCountDown/
 | **上传 Logo** | 上传图片替换 Logo |
 | **清除 Logo** | 恢复无 Logo 状态 |
 | **倒计时** | 设置时分秒启动倒计时（默认 00:10:00），支持重置 |
+| **钟面样式** | 切换 5 种钟面配色 |
 | **调整尺寸** | 修改窗口宽高（重启后生效） |
+| **开机自启** | 一键设置/取消开机自启 |
 | **重启程序** | 使用新配置重启 |
 | **退出程序** | 关闭 LED 显示 |
 
@@ -62,12 +70,12 @@ LEDCountDown/
 | POST | `/api/marquee` | `{"text":"..."}` 更新字幕 |
 | POST | `/api/logo` | 上传 Logo 图片 |
 | POST | `/api/logo/clear` | 清除 Logo |
-| POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时（分秒） |
+| POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时 |
 | POST | `/api/countdown/reset` | 重置倒计时 |
 | POST | `/api/clockface` | `{"index":N}` 切换钟面样式 (0-4) |
-| POST | `/api/restart` | 重启程序 |
+| POST | `/api/restart` | 重启程序（携带 `--width` `--height` 参数） |
 | POST | `/api/exit` | 退出程序 |
-| GET | `/api/status` | 获取运行状态 |
+| GET | `/api/status` | 获取运行状态（含倒计时和开机自启信息） |
 | GET | `/api/autostart` | 查询开机自启状态 |
 | POST | `/api/autostart` | `{"enable":true/false}` 设置/取消开机自启 |
 
@@ -95,10 +103,11 @@ LEDCountDown/
 
 ## 倒计时
 
-- **显示格式**：`MM:SS`，使用 DSEG14 LED 等宽字体
+- **显示格式**：`MM:SS`，使用 DSEG14 LED 等宽字体，冒号每 500ms 闪烁
+- **占位效果**：倒计时数字下层有半透明 `88:88` 占位符，保证布局稳定
 - **颜色变化**：> 5 分钟绿色 → 1~5 分钟橙色 → ≤ 1 分钟红色
-- **1 分钟提醒**：到达 1 分钟时系统提示音 + 金色文字闪烁 2 秒
-- **结束后**：立即恢复滚动字幕
+- **1 分钟提醒**：剩余 1 分钟时系统提示音 + 金色文字叠加显示 2 秒
+- **结束后**：播放提示音，立即恢复滚动字幕
 
 ## 使用方法
 
@@ -114,6 +123,12 @@ dotnet build src\LEDCountDown.csproj
 dotnet run --project src\LEDCountDown.csproj
 ```
 
+支持命令行参数覆盖窗口尺寸：
+
+```bash
+dotnet run --project src\LEDCountDown.csproj -- --width 1920 --height 240
+```
+
 或使用 VS Code 任务：`Ctrl+Shift+B` → **Build LED Display** / **Run LED Display**
 
 ### 配置文件
@@ -126,7 +141,8 @@ dotnet run --project src\LEDCountDown.csproj
   "height": 190,
   "webPort": 8000,
   "marqueeText": "热烈欢迎，这里是LED显示程序",
-  "logoPath": ""
+  "logoPath": "",
+  "clockFace": 0
 }
 ```
 
@@ -136,6 +152,7 @@ dotnet run --project src\LEDCountDown.csproj
 | `webPort` | 网页控制端口（默认 8000） |
 | `marqueeText` | 滚动字幕内容（较长时自动滚动，较短时居中） |
 | `logoPath` | Logo 图片路径（留空显示占位文字） |
+| `clockFace` | 钟面样式索引 (0-4，默认 0) |
 
 ### 更换 Logo
 
@@ -149,8 +166,9 @@ form.SetLogo(Image.FromFile("logo.png"));
 ## 技术栈
 
 - .NET Framework 2.0 + Windows Forms
-- GDI+ 自定义绘制（时钟表盘、滚动字幕、锥形指针）
+- GDI+ 自定义绘制（时钟表盘、滚动字幕、锥形指针、2x 超采样抗锯齿）
 - `Application.Idle` 驱动高帧率动画
+- `SetThreadExecutionState` 阻止系统息屏/睡眠
 - `HttpListener` 内置 HTTP 服务器
 - DSEG14 LED 等宽字体（SIL Open Font License）
 - JSON 配置文件

@@ -75,7 +75,6 @@ input[type=""file""] {
   border-bottom:1px solid #21262d;
 }
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 @media(max-width:480px){ .grid-2 { grid-template-columns:1fr; } .grid-3 { grid-template-columns:1fr; } }
 .server-info { text-align:center; font-size:12px; color:#484f58; margin-top:24px; }
@@ -370,7 +369,6 @@ checkAutoStart();
                 var request = ctx.Request;
                 var response = ctx.Response;
                 string path = request.Url.AbsolutePath.ToLowerInvariant();
-                string method = request.HttpMethod.ToUpperInvariant();
 
                 // ── 静态页面 ──
                 if (path == "/" || path == "/index.html")
@@ -536,7 +534,6 @@ checkAutoStart();
         private void HandleRestartApi(HttpListenerResponse resp)
         {
             ServeJson(resp, "{\"success\":true}");
-            // 延迟重启，确保响应已发送
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 Thread.Sleep(500);

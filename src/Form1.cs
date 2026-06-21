@@ -60,6 +60,7 @@ namespace LEDCountDown
             _clockFaceIndex = config.ClockFace;
             InitializeComponent();
             LoadFont();
+            SetIcon();
             InitForm();
             InitLogo();
             InitClock();
@@ -86,6 +87,24 @@ namespace LEDCountDown
             catch
             {
                 // 字体加载失败则使用系统默认字体
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        //  设置窗体和程序图标
+        // ═══════════════════════════════════════════
+        private void SetIcon()
+        {
+            try
+            {
+                string exeDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);
+                string iconPath = Path.Combine(Path.Combine(exeDir, "Resources"), "clock.ico");
+                if (File.Exists(iconPath))
+                    Icon = new Icon(iconPath);
+            }
+            catch
+            {
+                // 图标加载失败则使用默认图标
             }
         }
 
@@ -131,7 +150,3 @@ namespace LEDCountDown
     public delegate void CountdownStartDelegate(int seconds);
     public delegate string StringReturnDelegate();
 }
-
-// 额外的委托定义
-public delegate void CountdownStartDelegate(int seconds);
-public delegate string StringReturnDelegate();

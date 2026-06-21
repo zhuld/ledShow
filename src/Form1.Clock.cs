@@ -96,12 +96,6 @@ namespace LEDCountDown
             clockAreaSize = Math.Min(formHeight - 20, 200);
             clockAreaLeft = formWidth - clockAreaSize - 10;
             Paint += Form_ClockPaint;
-            Application.Idle += OnClockRefresh;
-        }
-
-        private void OnClockRefresh(object sender, EventArgs e)
-        {
-            Invalidate();
         }
 
         private void Form_ClockPaint(object sender, PaintEventArgs e)
