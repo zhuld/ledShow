@@ -325,8 +325,10 @@ checkAutoStart();
             {
                 _listener.Start();
                 _running = true;
-                _serverThread = new Thread(ListenLoop);
-                _serverThread.IsBackground = true;
+                _serverThread = new Thread(ListenLoop)
+                {
+                    IsBackground = true
+                };
                 _serverThread.Start();
                 Console.WriteLine("[WebControl] 服务器已启动: http://localhost:" + Port);
             }

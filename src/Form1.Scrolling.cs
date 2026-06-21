@@ -209,6 +209,5 @@ namespace LEDCountDown
             // 恢复裁剪区域
             g.ResetClip();
         }
-
     }
 }

@@ -78,7 +78,7 @@ namespace LEDCountDown
                 string fontPath = Path.Combine(Path.Combine(exeDir, "Resources"), "DigitalNumbers-Regular.ttf");
                 if (File.Exists(fontPath))
                 {
-                    _fontCollection = new System.Drawing.Text.PrivateFontCollection();
+                    _fontCollection = new PrivateFontCollection();
                     _fontCollection.AddFontFile(fontPath);
                     if (_fontCollection.Families.Length > 0)
                         _countdownFontFamily = _fontCollection.Families[0];
@@ -121,7 +121,6 @@ namespace LEDCountDown
             StartPosition = FormStartPosition.Manual;
             TopMost = true;
             DoubleBuffered = true;
-
         }
 
         // ═══════════════════════════════════════════
