@@ -193,42 +193,16 @@ namespace LEDCountDown
             }
 
             using (var brush = new SolidBrush(textMain))
+            using (var glowBrush = new SolidBrush(textGlow))
             {
                 if (marqueeNeedsScroll)
                 {
-                    // 发光底层
-                    using (var glowBrush = new SolidBrush(textGlow))
-                    {
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            scrollX - 1, centerY - marqueeFont.Height / 2f);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            scrollX + 1, centerY - marqueeFont.Height / 2f);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            scrollX, centerY - marqueeFont.Height / 2f - 1);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            scrollX, centerY - marqueeFont.Height / 2f + 1);
-
-                        if (scrollX + marqueeTextWidth < marqueeRight)
-                        {
-                            float x2 = scrollX + marqueeTextWidth + 30;
-                            g.DrawString(marqueeText, marqueeFont, glowBrush,
-                                x2 - 1, centerY - marqueeFont.Height / 2f);
-                            g.DrawString(marqueeText, marqueeFont, glowBrush,
-                                x2 + 1, centerY - marqueeFont.Height / 2f);
-                            g.DrawString(marqueeText, marqueeFont, glowBrush,
-                                x2, centerY - marqueeFont.Height / 2f - 1);
-                            g.DrawString(marqueeText, marqueeFont, glowBrush,
-                                x2, centerY - marqueeFont.Height / 2f + 1);
-                        }
-                    }
-
-                    // 主体文字
-                    g.DrawString(marqueeText, marqueeFont, brush,
+                    DrawGlowText(g, marqueeText, marqueeFont, glowBrush, brush,
                         scrollX, centerY - marqueeFont.Height / 2f);
 
                     if (scrollX + marqueeTextWidth < marqueeRight)
                     {
-                        g.DrawString(marqueeText, marqueeFont, brush,
+                        DrawGlowText(g, marqueeText, marqueeFont, glowBrush, brush,
                             scrollX + marqueeTextWidth + 30,
                             centerY - marqueeFont.Height / 2f);
                     }
@@ -236,20 +210,8 @@ namespace LEDCountDown
                 else
                 {
                     float centerX = marqueeLeft + (marqueeWidth - marqueeTextWidth) / 2f;
-                    // 发光底层
-                    using (var glowBrush = new SolidBrush(textGlow))
-                    {
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            centerX - 1, centerY - marqueeFont.Height / 2f);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            centerX + 1, centerY - marqueeFont.Height / 2f);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            centerX, centerY - marqueeFont.Height / 2f - 1);
-                        g.DrawString(marqueeText, marqueeFont, glowBrush,
-                            centerX, centerY - marqueeFont.Height / 2f + 1);
-                    }
-                    // 主体文字
-                    g.DrawString(marqueeText, marqueeFont, brush, centerX, centerY - marqueeFont.Height / 2f);
+                    DrawGlowText(g, marqueeText, marqueeFont, glowBrush, brush,
+                        centerX, centerY - marqueeFont.Height / 2f);
                 }
             }
 
@@ -274,6 +236,19 @@ namespace LEDCountDown
 
             // 恢复裁剪区域
             g.ResetClip();
+        }
+
+        /// <summary>绘制带发光辉光的文字（上下左右各偏移 1px）</summary>
+        private static void DrawGlowText(Graphics g, string text, Font font,
+            Brush glowBrush, Brush textBrush, float x, float y)
+        {
+            // 发光层（4 方向偏移）
+            g.DrawString(text, font, glowBrush, x - 1, y);
+            g.DrawString(text, font, glowBrush, x + 1, y);
+            g.DrawString(text, font, glowBrush, x, y - 1);
+            g.DrawString(text, font, glowBrush, x, y + 1);
+            // 主体层
+            g.DrawString(text, font, textBrush, x, y);
         }
     }
 }

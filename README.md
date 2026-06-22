@@ -4,11 +4,11 @@
 
 ## 功能
 
-- **无边框窗口**（1500×190），黑色背景，置顶显示
+- **无边框窗口**（默认 1500×190），黑色背景，置顶显示
 - **左侧 Logo**：支持图片显示（可配置路径 / 网页上传）
-- **中间滚动字幕**：横向循环滚动 / 文字较短时自动居中，红色到深红垂直渐变色
-- **右侧模拟时钟**：指针式时钟，阿拉伯数字 1~12，秒针连续平滑转动，支持 5 种钟面配色
-- **倒计时**：支持时分秒设置（网页默认 10 分钟），使用 DSEG14 LED 等宽字体，颜色随剩余时间变化，结束后立即恢复字幕
+- **中间滚动字幕**：横向循环滚动，发光辉光 + 边缘淡入淡出，颜色随钟面主题联动
+- **右侧拟物时钟**：60 个精密刻度，锥形指针 + 配重秒针，5 种高级配色主题，2x 超采样抗锯齿
+- **倒计时**：支持时分秒设置，使用 DSEG14 LED 等宽字体，颜色随剩余时间变化，结束后立即恢复字幕
 - **网页控制**：内置 HTTP 服务器，通过浏览器实时控制
 - **防息屏**：程序运行时阻止系统进入睡眠和关闭显示器，适合长时间信息展示
 - **命令行参数**：支持 `--width` 和 `--height` 参数覆盖窗口尺寸
@@ -24,21 +24,22 @@ LEDCountDown/
 ├── .vscode/                # VS Code 配置（任务）
 │   └── tasks.json
 ├── src/                    # 源代码目录
-│   ├── LEDCountDown.csproj # 项目文件
+│   ├── LEDCountDown.csproj # 项目文件（.NET Framework 2.0）
 │   ├── Program.cs          # 入口点
 │   ├── Config.cs           # 配置文件读写
-│   ├── Form1.cs            # 核心代码：字段、构造函数、窗体/LED 字体/Logo 初始化
-│   ├── Form1.Clock.cs      # 模拟时钟绘制（表盘、指针）
-│   ├── Form1.Scrolling.cs  # 滚动字幕 + 倒计时逻辑 + 主渲染方法
-│   ├── Form1.Public.cs     # 公开 API（字幕更新、Logo、倒计时控制等）
+│   ├── Form1.cs            # 核心字段、构造函数、初始化
+│   ├── Form1.Clock.cs      # 拟物模拟时钟绘制（表盘、刻度、指针）
+│   ├── Form1.Scrolling.cs  # 滚动字幕 + 倒计时逻辑 + 主渲染
+│   ├── Form1.Public.cs     # 公开 API（字幕、Logo、倒计时控制等）
 │   ├── Form1.Designer.cs   # 窗体设计器代码
-│   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器
-│   └── Resources/          # 资源文件
-│       └── DigitalNumbers-Regular.ttf  # LED 等宽字体
+│   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器 + 前端页面
+│   └── Resources/
+│       ├── clock.ico                      # 应用图标（256×256，新拟物表盘）
+│       └── DigitalNumbers-Regular.ttf     # LED 等宽字体
 ├── bin/                    # 构建输出（已 gitignore）
 │   └── Debug/
 │       ├── logos/          # 网页上传的 Logo 图片（运行时创建）
-│       └── Resources/      # 资源文件（字体、图标）
+│       └── Resources/      # 资源文件
 └── obj/                    # 临时编译文件（已 gitignore）
 ```
 
@@ -54,7 +55,7 @@ LEDCountDown/
 | **上传 Logo** | 上传图片替换 Logo |
 | **清除 Logo** | 恢复无 Logo 状态 |
 | **倒计时** | 设置时分秒启动倒计时（默认 00:10:00），支持重置 |
-| **钟面样式** | 切换 5 种钟面配色 |
+| **钟面样式** | 切换 5 种高级配色主题 |
 | **调整尺寸** | 修改窗口宽高（重启后生效） |
 | **开机自启** | 一键设置/取消开机自启 |
 | **重启程序** | 使用新配置重启 |
@@ -72,8 +73,9 @@ LEDCountDown/
 | POST | `/api/logo/clear` | 清除 Logo |
 | POST | `/api/countdown/start` | `{"seconds":N}` 启动倒计时 |
 | POST | `/api/countdown/reset` | 重置倒计时 |
+| GET | `/api/clockface` | 获取当前钟面及所有可选主题列表 |
 | POST | `/api/clockface` | `{"index":N}` 切换钟面样式 (0-4) |
-| POST | `/api/restart` | 重启程序（携带 `--width` `--height` 参数） |
+| POST | `/api/restart` | 重启程序 |
 | POST | `/api/exit` | 退出程序 |
 | GET | `/api/status` | 获取运行状态（含倒计时和开机自启信息） |
 | GET | `/api/autostart` | 查询开机自启状态 |
@@ -91,15 +93,47 @@ LEDCountDown/
 
 ## 钟面样式
 
-网页控制面板可选择 5 种钟面配色：
+网页控制面板可选择 5 种高级拟物配色主题：
 
-| 索引 | 名称 | 风格 |
-|------|------|------|
-| 0 | 🔵 经典蓝 | 蓝光科技风（默认） |
-| 1 | ⚪ 极简白 | 简洁白灰 |
-| 2 | 🟠 复古琥珀 | 琥珀/磷光单色 |
-| 3 | 🟢 霓虹青 | 青蓝霓虹赛博风 |
-| 4 | 🟡 暗金 | 奢华金棕 |
+| 索引 | 名称 | 风格 | 盘面 | 外圈 |
+|------|------|------|------|------|
+| 0 | 🤍 典雅白陶瓷 | 暖白陶瓷 + 玫瑰金 | 米白渐变 | 玫瑰金金属环 |
+| 1 | 💙 深海幽蓝 | 深海蓝 + 精钢银 | 深海军蓝 | 精钢银环 |
+| 2 | ❤️ 勃艮第酒红 | 勃艮第红 + 香槟金 | 暗酒红 | 玫瑰金环 |
+| 3 | 🩶 陨石灰 | 炭灰 + 铂金白 | 深炭灰 | 铂金银环 |
+| 4 | 🖤 墨玉黑金 | 墨玉 + 黄金 | 墨绿黑 | 黄金环 |
+
+每个主题包含：
+- 径向渐变表盘（中心亮 → 边缘暗，模拟凹面透镜）
+- 斜面金属外圈（环绕渐变 + 高光切边）
+- 60 个精密刻度（3 级粗细，主刻度带投影和高光）
+- 锥形指针（宽底窄尖，带右下投影）
+- 配重秒针（细线 + 尾部圆 + 中心小圆）
+- 精钢中心轴
+- 玻璃弧面反光
+
+## 滚动字幕
+
+- **字体**：微软雅黑，字号为窗体高度的 80%
+- **发光效果**：主体文字四周半透明辉光层
+- **颜色联动**：字幕颜色随钟面主题自动匹配
+- **边缘淡入淡出**：左右各 40px 渐变遮罩，文字进入/离开时平滑过渡
+- **滚动逻辑**：文字超出显示区域时从右侧外开始循环左移；未超出时居中显示
+- **帧率控制**：`Application.Idle` 驱动，每帧限制最大位移防止卡顿跳变
+
+## 模拟时钟
+
+- **渲染引擎**：2x 超采样位图 + `HighQualityBicubic` 缩放，消除锯齿
+- **表盘**：`PathGradientBrush` 径向渐变，中心亮度略高于边缘
+- **外圈**：环绕渐变金属环 + 左上高光切边 + 右下阴影切边，立体斜面感
+- **刻度**：60 个刻度按层级分为 12/3/6/9（最长）、其他整点（中等）、分钟（细短）
+- **数字**：12 个阿拉伯数字，带微阴影
+- **时针**：6 顶点锥形（宽底→收腰→尖头），短粗优雅
+- **分针**：6 顶点锥形，修长
+- **秒针**：细线针体 + 尾部配重圆 + 中心小圆
+- **中心轴**：阴影外圈 → 金属渐变环 → 内圈主体 → 高光点
+- **玻璃反光**：顶部弧面渐变，模拟曲面玻璃
+- **AM/PM**：中心轴下方显示
 
 ## 倒计时
 
@@ -129,7 +163,7 @@ dotnet run --project src\LEDCountDown.csproj
 dotnet run --project src\LEDCountDown.csproj -- --width 1920 --height 240
 ```
 
-或使用 VS Code 任务：`Ctrl+Shift+B` → **Build LED Display** / **Run LED Display**
+或使用 VS Code 任务：`Ctrl+Shift+B` → **Build LEDCountDown** / **Run LEDCountDown**
 
 ### 配置文件
 
@@ -151,7 +185,7 @@ dotnet run --project src\LEDCountDown.csproj -- --width 1920 --height 240
 | `width` / `height` | 窗口尺寸 |
 | `webPort` | 网页控制端口（默认 8000） |
 | `marqueeText` | 滚动字幕内容（较长时自动滚动，较短时居中） |
-| `logoPath` | Logo 图片路径（留空显示占位文字） |
+| `logoPath` | Logo 图片路径（留空不显示） |
 | `clockFace` | 钟面样式索引 (0-4，默认 0) |
 
 ### 更换 Logo
@@ -166,7 +200,8 @@ form.SetLogo(Image.FromFile("logo.png"));
 ## 技术栈
 
 - .NET Framework 2.0 + Windows Forms
-- GDI+ 自定义绘制（时钟表盘、滚动字幕、锥形指针、2x 超采样抗锯齿）
+- GDI+ 自定义绘制：`PathGradientBrush`、`LinearGradientBrush`、`GraphicsPath`
+- 2x 超采样抗锯齿 + `HighQualityBicubic` 缩放
 - `Application.Idle` 驱动高帧率动画
 - `SetThreadExecutionState` 阻止系统息屏/睡眠
 - `HttpListener` 内置 HTTP 服务器
