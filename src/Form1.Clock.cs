@@ -289,7 +289,7 @@ namespace LEDCountDown
                         float numR = faceR * 0.72f;
                         float numX = cx2 + (float)(numR * Math.Cos(rad));
                         float numY = cy2 + (float)(numR * Math.Sin(rad));
-                        string num = (i == 0 ? "12" : i.ToString());
+                        string num = i == 0 ? "12" : i.ToString();
 
                         var sz = bg.MeasureString(num, numFont);
                         // 阴影

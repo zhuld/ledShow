@@ -142,7 +142,7 @@ namespace LEDCountDown
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
                     int m = totalSecs / 60;
                     int s = totalSecs % 60;
-                    string colon = (Environment.TickCount / 500) % 2 == 0 ? " " : ":";
+                    string colon = Environment.TickCount / 500 % 2 == 0 ? " " : ":";
                     displayText = string.Format("{0,2}" + colon + "{1:D2}", m, s);
                     if (totalSecs <= 60)
                         textColor = Color.Red;
@@ -166,11 +166,13 @@ namespace LEDCountDown
                     var sz = g.MeasureString(displayText, font);
                     float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
                     float cy = centerY - sz.Height / 2f;
-                    // 底层：半透明 88:88 占位符（20%透明度，冒号同步闪烁）
-                    string placeholderColon = (Environment.TickCount / 500) % 2 == 0 ? " " : ":";
+                    // 底层：半透明 88:88 占位符（冒号同步闪烁）
+                    string placeholderColon = Environment.TickCount / 500 % 2 == 0 ? " " : ":";
                     using (var dimBrush = new SolidBrush(Color.FromArgb(5, textColor)))
                         g.DrawString("88:88", font, dimBrush, cx, cy);
-                    // 顶层：实际倒计时数字
+                    // 模糊边缘层：在数字周围绘制多重半透明偏移副本，营造柔光模糊效果
+                    DrawBlurredEdge(g, displayText, font, textColor, cx, cy, blurRadius: 2);
+                    // 顶层：实际倒计时数字（清晰层）
                     g.DrawString(displayText, font, brush, cx, cy);
                 }
                 return;
@@ -249,6 +251,41 @@ namespace LEDCountDown
             g.DrawString(text, font, glowBrush, x, y + 1);
             // 主体层
             g.DrawString(text, font, textBrush, x, y);
+        }
+
+        /// <summary>
+        /// 绘制文字的模糊边缘效果（柔光辉光）。
+        /// 在文字周围以圆形分布绘制多重半透明偏移副本，模拟模糊边缘。
+        /// </summary>
+        /// <param name="g">Graphics 对象</param>
+        /// <param name="text">要绘制的文字</param>
+        /// <param name="font">字体</param>
+        /// <param name="color">文字颜色</param>
+        /// <param name="x">左上角 X</param>
+        /// <param name="y">左上角 Y</param>
+        /// <param name="blurRadius">模糊半径（像素），越大边缘越模糊</param>
+        private static void DrawBlurredEdge(Graphics g, string text, Font font,
+            Color color, float x, float y, int blurRadius = 3)
+        {
+            // 在圆形区域内绘制多层半透明副本，距离中心越远透明度越低
+            for (int dy = -blurRadius; dy <= blurRadius; dy++)
+            {
+                for (int dx = -blurRadius; dx <= blurRadius; dx++)
+                {
+                    int distSq = dx * dx + dy * dy;
+                    if (distSq > blurRadius * blurRadius)
+                        continue;
+
+                    // 根据距离计算 alpha：边缘约 20，中心附近约 4
+                    float dist = (float)Math.Sqrt(distSq);
+                    float ratio = dist / blurRadius; // 0~1
+                    int alpha = (int)(18 * (1 - ratio * ratio));
+                    if (alpha <= 0) continue;
+
+                    using (var blurBrush = new SolidBrush(Color.FromArgb(alpha, color)))
+                        g.DrawString(text, font, blurBrush, x + dx, y + dy);
+                }
+            }
         }
     }
 }
