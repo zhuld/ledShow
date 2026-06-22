@@ -17,6 +17,11 @@ namespace LEDCountDown
         private Thread _serverThread;
         private bool _running;
 
+        /// <summary>钟面样式名称列表</summary>
+        private static readonly string[] THEME_NAMES = new string[] {
+            "典雅白陶瓷", "深海幽蓝", "勃艮第酒红", "陨石灰", "墨玉黑金"
+        };
+
         private int Port { get { return _config.WebPort; } }
 
         // ═══════════════════════════════════════════
@@ -123,11 +128,11 @@ input[type=""file""] {
   <div class=""form-group"">
     <label for=""clockFace"">选择钟面</label>
     <select id=""clockFace"" onchange=""setClockFace()"">
-      <option value=""0"">🔵 经典蓝</option>
-      <option value=""1"">⚪ 极简白</option>
-      <option value=""2"">🟠 复古琥珀</option>
-      <option value=""3"">🟢 霓虹青</option>
-      <option value=""4"">🟡 暗金</option>
+      <option value=""0"">🤍 典雅白陶瓷</option>
+      <option value=""1"">💙 深海幽蓝</option>
+      <option value=""2"">❤️ 勃艮第酒红</option>
+      <option value=""3"">🩶 陨石灰</option>
+      <option value=""4"">🖤 墨玉黑金</option>
     </select>
   </div>
 
@@ -184,11 +189,21 @@ function showStatus(msg, type) {
 
 async function loadConfig() {
   try {
-    const cfg = await api('GET', '/api/config');
+    const [cfg, cfInfo] = await Promise.all([
+      api('GET', '/api/config'),
+      api('GET', '/api/clockface')
+    ]);
     document.getElementById('marqueeText').value = cfg.marqueeText || '';
     document.getElementById('width').value = cfg.width || 1500;
     document.getElementById('height').value = cfg.height || 190;
     document.getElementById('clockFace').value = cfg.clockFace || 0;
+    // 更新下拉选项文字
+    const sel = document.getElementById('clockFace');
+    if (cfInfo && cfInfo.themes) {
+      for (let i = 0; i < sel.options.length && i < cfInfo.themes.length; i++) {
+        sel.options[i].text = cfInfo.themes[i].name;
+      }
+    }
   } catch(e) { showStatus('加载配置失败', 'error'); }
 }
 
@@ -196,7 +211,7 @@ async function setClockFace() {
   const idx = parseInt(document.getElementById('clockFace').value);
   try {
     const r = await api('POST', '/api/clockface', { index: idx });
-    if (r.success) showStatus('钟面已切换', 'success');
+    if (r.success) showStatus('钟面已切换: ' + r.name, 'success');
     else showStatus(r.error || '切换失败', 'error');
   } catch(e) { showStatus('请求失败: ' + e.message, 'error'); }
 }
@@ -451,7 +466,7 @@ checkAutoStart();
                     if (w > 0) _config.Width = w;
                     if (h > 0) _config.Height = h;
                     if (t != null) _config.MarqueeText = t;
-                    if (cfStr != null) { int cf = int.Parse(cfStr); if (cf >= 0 && cf <= 4) { _config.ClockFace = cf; _form.SetClockFace(cf); } }
+                    if (cfStr != null) { int cf = int.Parse(cfStr); if (cf >= 0 && cf < THEME_NAMES.Length) { _config.ClockFace = cf; _form.SetClockFace(cf); } }
 
                     _config.Save();
 
@@ -581,17 +596,33 @@ checkAutoStart();
 
         private void HandleClockFaceApi(HttpListenerRequest req, HttpListenerResponse resp)
         {
+            if (req.HttpMethod == "GET")
+            {
+                int idx = _config.ClockFace;
+                string json = "{\"index\":" + idx + ",\"name\":\"" + THEME_NAMES[idx] +
+                    "\",\"themes\":[";
+                for (int i = 0; i < THEME_NAMES.Length; i++)
+                {
+                    if (i > 0) json += ",";
+                    json += "{\"index\":" + i + ",\"name\":\"" + THEME_NAMES[i] + "\"}";
+                }
+                json += "]}";
+                ServeJson(resp, json);
+                return;
+            }
+
             string body = ReadBody(req);
             int index = ParseJsonInt(body, "index");
-            if (index < 0 || index > 4)
+            if (index < 0 || index >= THEME_NAMES.Length)
             {
-                ServeJson(resp, "{\"success\":false,\"error\":\"无效的钟面索引 (0-4)\"}");
+                ServeJson(resp, "{\"success\":false,\"error\":\"无效的钟面索引 (0-" +
+                    (THEME_NAMES.Length - 1) + ")\"}");
                 return;
             }
             _config.ClockFace = index;
             _config.Save();
             _form.SetClockFace(index);
-            ServeJson(resp, "{\"success\":true}");
+            ServeJson(resp, "{\"success\":true,\"name\":\"" + THEME_NAMES[index] + "\"}");
         }
         private void HandleAutoStartApi(HttpListenerRequest req, HttpListenerResponse resp)
         {
@@ -610,11 +641,13 @@ checkAutoStart();
         }
         private void HandleStatusApi(HttpListenerResponse resp)
         {
+            int cf = _config.ClockFace;
             string json = "{\"running\":true,\"marqueeText\":" +
                 EscapeJson(_config.MarqueeText) + ",\"width\":" +
                 _config.Width + ",\"height\":" + _config.Height +
-                ",\"clockFace\":" + _config.ClockFace +
-                ",\"autoStart\":" + (Form1.GetAutoStart() ? "true" : "false") +
+                ",\"clockFace\":" + cf + ",\"clockFaceName\":\"" +
+                THEME_NAMES[cf] + "\",\"autoStart\":" +
+                (Form1.GetAutoStart() ? "true" : "false") +
                 ",\"countdown\":" + _form.GetCountdownStatus() + "}";
             ServeJson(resp, json);
         }

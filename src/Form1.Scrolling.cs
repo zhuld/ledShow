@@ -102,7 +102,7 @@ namespace LEDCountDown
             g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
             g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
             // 字幕区域：logo 右侧（无 logo 则从左侧 10px 起）到时钟区域左侧-15
             float marqueeLeft = GetMarqueeLeft();
@@ -180,30 +180,96 @@ namespace LEDCountDown
             // 设置裁剪区域，使文字仅在 Logo 和时钟之间的区域可见
             g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
 
-            // 用渐变颜色绘制文字（上下渐变，下面深红）
-            using (var brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-                new PointF(0, 0),
-                new PointF(0, Height),
-                Color.Red,
-                Color.DarkRed))
+            // 文字颜色：根据当前钟面主题选取配色
+            Color textMain, textGlow;
+            switch (_clockFaceIndex)
+            {
+                case 0: textMain = Color.FromArgb(200, 180, 160); textGlow = Color.FromArgb(40, 200, 180, 160); break;
+                case 1: textMain = Color.FromArgb(160, 200, 240); textGlow = Color.FromArgb(40, 160, 200, 240); break;
+                case 2: textMain = Color.FromArgb(220, 180, 140); textGlow = Color.FromArgb(40, 220, 180, 140); break;
+                case 3: textMain = Color.FromArgb(200, 200, 215); textGlow = Color.FromArgb(40, 200, 200, 215); break;
+                case 4: textMain = Color.FromArgb(220, 195, 80); textGlow = Color.FromArgb(40, 220, 195, 80); break;
+                default: textMain = Color.FromArgb(200, 80, 80); textGlow = Color.FromArgb(40, 200, 80, 80); break;
+            }
+
+            using (var brush = new SolidBrush(textMain))
             {
                 if (marqueeNeedsScroll)
                 {
-                    // 滚动模式
-                    g.DrawString(marqueeText, marqueeFont, brush, scrollX, centerY - marqueeFont.Height / 2f);
+                    // 发光底层
+                    using (var glowBrush = new SolidBrush(textGlow))
+                    {
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            scrollX - 1, centerY - marqueeFont.Height / 2f);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            scrollX + 1, centerY - marqueeFont.Height / 2f);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            scrollX, centerY - marqueeFont.Height / 2f - 1);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            scrollX, centerY - marqueeFont.Height / 2f + 1);
+
+                        if (scrollX + marqueeTextWidth < marqueeRight)
+                        {
+                            float x2 = scrollX + marqueeTextWidth + 30;
+                            g.DrawString(marqueeText, marqueeFont, glowBrush,
+                                x2 - 1, centerY - marqueeFont.Height / 2f);
+                            g.DrawString(marqueeText, marqueeFont, glowBrush,
+                                x2 + 1, centerY - marqueeFont.Height / 2f);
+                            g.DrawString(marqueeText, marqueeFont, glowBrush,
+                                x2, centerY - marqueeFont.Height / 2f - 1);
+                            g.DrawString(marqueeText, marqueeFont, glowBrush,
+                                x2, centerY - marqueeFont.Height / 2f + 1);
+                        }
+                    }
+
+                    // 主体文字
+                    g.DrawString(marqueeText, marqueeFont, brush,
+                        scrollX, centerY - marqueeFont.Height / 2f);
 
                     if (scrollX + marqueeTextWidth < marqueeRight)
                     {
                         g.DrawString(marqueeText, marqueeFont, brush,
-                            scrollX + marqueeTextWidth + 30, centerY - marqueeFont.Height / 2f);
+                            scrollX + marqueeTextWidth + 30,
+                            centerY - marqueeFont.Height / 2f);
                     }
                 }
                 else
                 {
-                    // 居中显示
                     float centerX = marqueeLeft + (marqueeWidth - marqueeTextWidth) / 2f;
+                    // 发光底层
+                    using (var glowBrush = new SolidBrush(textGlow))
+                    {
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            centerX - 1, centerY - marqueeFont.Height / 2f);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            centerX + 1, centerY - marqueeFont.Height / 2f);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            centerX, centerY - marqueeFont.Height / 2f - 1);
+                        g.DrawString(marqueeText, marqueeFont, glowBrush,
+                            centerX, centerY - marqueeFont.Height / 2f + 1);
+                    }
+                    // 主体文字
                     g.DrawString(marqueeText, marqueeFont, brush, centerX, centerY - marqueeFont.Height / 2f);
                 }
+            }
+
+            // ── 边缘淡入淡出遮罩 ──
+            float fadeWidth = 40;
+            // 左边缘
+            using (var fadeLeft = new System.Drawing.Drawing2D.LinearGradientBrush(
+                new PointF(marqueeLeft, 0), new PointF(marqueeLeft + fadeWidth, 0),
+                Color.Black, Color.FromArgb(0, Color.Black)))
+            {
+                fadeLeft.WrapMode = System.Drawing.Drawing2D.WrapMode.TileFlipX;
+                g.FillRectangle(fadeLeft, marqueeLeft, 0, fadeWidth, Height);
+            }
+            // 右边缘
+            using (var fadeRight = new System.Drawing.Drawing2D.LinearGradientBrush(
+                new PointF(marqueeRight - fadeWidth, 0), new PointF(marqueeRight, 0),
+                Color.FromArgb(0, Color.Black), Color.Black))
+            {
+                fadeRight.WrapMode = System.Drawing.Drawing2D.WrapMode.TileFlipX;
+                g.FillRectangle(fadeRight, marqueeRight - fadeWidth, 0, fadeWidth, Height);
             }
 
             // 恢复裁剪区域
