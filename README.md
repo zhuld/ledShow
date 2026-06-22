@@ -222,10 +222,6 @@ dotnet run --project src\LEDCountDown.csproj -- --width 1920 --height 240
 
 在 `config.json` 中设置 `logoPath`，或通过代码调用：
 
-```csharp
-form.SetLogo(@"C:\path\to\logo.png");
-form.SetLogo(Image.FromFile("logo.png"));
-```
 
 ## 技术栈
 
@@ -236,5 +232,5 @@ form.SetLogo(Image.FromFile("logo.png"));
 - `SetThreadExecutionState` 阻止系统息屏/睡眠
 - `HttpListener` 内置 HTTP 服务器（支持局域网访问）
 - Windows 防火墙 API（`netsh advfirewall`）
-- DSEG14 LED 等宽字体（SIL Open Font License）
+- DigitalNumbers 等宽字体
 - JSON 配置文件
