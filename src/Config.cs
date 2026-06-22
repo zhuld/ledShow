@@ -16,7 +16,7 @@ namespace LEDCountDown
         public string LogoPath { get; set; }
         public int ClockFace { get; set; }
 
-        /// <summary>配置文件路径（与 exe 同目录）</summary>
+        /// <summary>配置文件路径（与 exe 同目录下的 config.json）</summary>
         private static string ConfigPath
         {
             get
@@ -26,12 +26,13 @@ namespace LEDCountDown
             }
         }
 
-        // ── 默认值 ──
+        // ── 默认值（首次运行或配置项缺失时使用）──
         private const int DEFAULT_WIDTH = 1500;
         private const int DEFAULT_HEIGHT = 190;
         private const int DEFAULT_WEBPORT = 8000;
         private const string DEFAULT_MARQUEE = "热烈欢迎，这里是LED显示程序";
 
+        /// <summary>使用默认值初始化配置</summary>
         public Config()
         {
             Width = DEFAULT_WIDTH;
@@ -43,7 +44,8 @@ namespace LEDCountDown
         }
 
         /// <summary>
-        /// 加载配置，文件不存在则自动创建默认配置
+        /// 从 config.json 加载配置。
+        /// 若文件不存在则自动创建默认配置并保存；若解析失败则静默回退到默认值。
         /// </summary>
         public static Config Load()
         {
@@ -59,12 +61,12 @@ namespace LEDCountDown
                 }
                 catch
                 {
-                    // 解析失败则用默认值
+                    // JSON 文件损坏或格式不兼容时，使用默认值继续运行
                 }
             }
             else
             {
-                // 不存在则创建默认配置
+                // 首次运行，创建默认配置文件
                 cfg.Save();
             }
 
@@ -72,7 +74,7 @@ namespace LEDCountDown
         }
 
         /// <summary>
-        /// 保存配置到 config.json
+        /// 将当前配置序列化为 JSON 并保存到 config.json
         /// </summary>
         public void Save()
         {
@@ -85,6 +87,7 @@ namespace LEDCountDown
         //  简易 JSON 序列化/反序列化（仅支持此简单结构）
         // ════════════════════════════════════════
 
+        /// <summary>将配置序列化为 JSON 字符串（手动拼接，无需第三方库）</summary>
         public string ToJson()
         {
             StringBuilder sb = new StringBuilder();
@@ -99,6 +102,7 @@ namespace LEDCountDown
             return sb.ToString();
         }
 
+        /// <summary>解析 JSON 字符串，提取各字段值到属性中</summary>
         private void ParseJson(string json)
         {
             Width = ParseInt(json, "width", DEFAULT_WIDTH);

@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.IO;
-using System.Media;
 using System.Windows.Forms;
 
 namespace LEDCountDown
@@ -14,7 +13,12 @@ namespace LEDCountDown
         //  公开方法：开机自启
         // ═══════════════════════════════════════════
 
-        /// <summary>设置或取消开机自启</summary>
+        /// <summary>
+        /// 设置或取消开机自启。
+        /// 通过修改注册表 HKCU\Software\Microsoft\Windows\CurrentVersion\Run 实现，
+        /// 仅对当前用户生效，无需管理员权限。
+        /// </summary>
+        /// <param name="enable">true 启用开机自启，false 取消</param>
         public static void SetAutoStart(bool enable)
         {
             using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
@@ -28,6 +32,7 @@ namespace LEDCountDown
         }
 
         /// <summary>查询是否已设置开机自启</summary>
+        /// <returns>true 表示已启用开机自启</returns>
         public static bool GetAutoStart()
         {
             using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
@@ -40,9 +45,11 @@ namespace LEDCountDown
         //  公开方法：钟面样式
         // ═══════════════════════════════════════════
 
-        /// <summary>切换钟面样式（线程安全）</summary>
+        /// <summary>切换钟面样式（线程安全，可在后台线程直接调用）</summary>
+        /// <param name="index">钟面索引（0~4，对应 5 种配色方案）</param>
         public void SetClockFace(int index)
         {
+            // 若在非 UI 线程调用，通过 Invoke 封送到 UI 线程执行
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(() => SetClockFace(index)));
@@ -51,12 +58,13 @@ namespace LEDCountDown
 
             if (index < 0 || index > 4) return;
             _clockFaceIndex = index;
-            Invalidate();
+            Invalidate();   // 触发重绘，应用新钟面
         }
 
         // ═══════════════════════════════════════════
         //  公开方法：更换 Logo
         // ═══════════════════════════════════════════
+        /// <summary>确保 Logo 控件已创建（懒加载，仅在需要时创建）</summary>
         private void EnsureLogoBox()
         {
             if (logoBox != null) return;
@@ -71,6 +79,8 @@ namespace LEDCountDown
             Controls.Add(logoBox);
         }
 
+        /// <summary>设置 Logo 图片（线程安全，通过文件路径加载）</summary>
+        /// <param name="imagePath">图片文件路径，不存在则忽略</param>
         public void SetLogo(string imagePath)
         {
             if (File.Exists(imagePath))
@@ -85,7 +95,11 @@ namespace LEDCountDown
         //  公开方法：网页控制接口
         // ═══════════════════════════════════════════
 
-        /// <summary>更新滚动字幕文字（线程安全）</summary>
+        /// <summary>
+        /// 更新滚动字幕文字（线程安全，可在后台线程直接调用）。
+        /// 会自动重新计算字体大小和是否需要滚动，若需要滚动则将位置重置到右侧起点。
+        /// </summary>
+        /// <param name="text">新的字幕文字</param>
         public void UpdateMarqueeText(string text)
         {
             if (InvokeRequired)
@@ -95,7 +109,7 @@ namespace LEDCountDown
             }
 
             marqueeText = text;
-            // 重新计算字体和宽度
+            // 释放旧字体，重新创建以适应新文字
             if (marqueeFont != null)
             {
                 marqueeFont.Dispose();
@@ -107,6 +121,7 @@ namespace LEDCountDown
                 marqueeTextWidth = tmpG.MeasureString(marqueeText, marqueeFont).Width;
             }
 
+            // 判断文字宽度是否超过可用区域，超过则需要滚动
             float marqueeLeft = GetMarqueeLeft();
             float marqueeRight = clockAreaLeft - 15;
             float availableWidth = marqueeRight - marqueeLeft;
@@ -114,13 +129,16 @@ namespace LEDCountDown
 
             if (marqueeNeedsScroll)
             {
-                scrollX = formWidth;
+                scrollX = formWidth;    // 从右侧外开始，准备向左滚动
             }
 
             Invalidate();
         }
 
-        /// <summary>清除 Logo（线程安全）</summary>
+        /// <summary>
+        /// 清除 Logo 图片并释放资源（线程安全）。
+        /// 如果从未设置过 Logo（logoBox 为 null）则直接返回。
+        /// </summary>
         public void ClearLogo()
         {
             if (InvokeRequired)
@@ -131,6 +149,7 @@ namespace LEDCountDown
 
             if (logoBox == null) return;
 
+            // 释放 Image 资源防止内存泄漏
             if (logoBox.Image != null)
             {
                 logoBox.Image.Dispose();
@@ -143,7 +162,11 @@ namespace LEDCountDown
         //  公开方法：倒计时控制
         // ═══════════════════════════════════════════
 
-        /// <summary>开始倒计时（线程安全）</summary>
+        /// <summary>
+        /// 开始倒计时（线程安全）。
+        /// 设置总秒数、剩余秒数和结束时刻（基于 Environment.TickCount），
+        /// 然后将状态切换为 Running 并触发重绘。
+        /// </summary>
         /// <param name="seconds">倒计时秒数</param>
         public void StartCountdown(int seconds)
         {
@@ -161,7 +184,10 @@ namespace LEDCountDown
             Invalidate();
         }
 
-        /// <summary>重置/取消倒计时（线程安全）</summary>
+        /// <summary>
+        /// 重置/取消倒计时（线程安全）。
+        /// 将状态恢复为 Idle，清除所有倒计时相关标记，界面恢复显示滚动字幕。
+        /// </summary>
         public void ResetCountdown()
         {
             if (InvokeRequired)
@@ -177,7 +203,10 @@ namespace LEDCountDown
             Invalidate();
         }
 
-        /// <summary>获取倒计时状态（线程安全，供 API 调用）</summary>
+        /// <summary>
+        /// 获取倒计时状态 JSON（线程安全，供网页控制 API 调用）。
+        /// 返回格式：{"state":"idle|running|finished","remaining":N,"total":N}
+        /// </summary>
         public string GetCountdownStatus()
         {
             if (InvokeRequired)
@@ -185,6 +214,7 @@ namespace LEDCountDown
                 return (string)Invoke(new StringReturnDelegate(GetCountdownStatus));
             }
 
+            // 将枚举状态映射为字符串，供前端解析
             string stateStr;
             switch (_countdownState)
             {

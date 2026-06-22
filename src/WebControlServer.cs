@@ -17,16 +17,19 @@ namespace LEDCountDown
         private Thread _serverThread;
         private bool _running;
 
-        /// <summary>钟面样式名称列表</summary>
+        /// <summary>钟面样式名称列表（索引对应 Form1.Clock.cs 中的 CLOCK_THEMES）</summary>
         private static readonly string[] THEME_NAMES = new string[] {
             "典雅白陶瓷", "深海幽蓝", "勃艮第酒红", "陨石灰", "墨玉黑金"
         };
 
+        /// <summary>获取监听的端口号（从配置中读取）</summary>
         private int Port { get { return _config.WebPort; } }
 
         // ═══════════════════════════════════════════
-        //  独立 HTML 控制页面路径
+        //  HTML 控制页面
         // ═══════════════════════════════════════════
+
+        /// <summary>获取 web/index.html 的完整路径</summary>
         private static string HtmlPagePath
         {
             get
@@ -36,6 +39,7 @@ namespace LEDCountDown
             }
         }
 
+        /// <summary>从磁盘加载 HTML 控制页面，文件不存在时返回错误提示</summary>
         private static string LoadHtmlPage()
         {
             string path = HtmlPagePath;
@@ -44,6 +48,10 @@ namespace LEDCountDown
             return "<html><body><h1>页面文件丢失</h1><p>找不到 " + path + "</p></body></html>";
         }
 
+        /// <summary>
+        /// 初始化 Web 控制服务器。
+        /// 注意：此时尚未启动监听，需调用 Start() 方法。
+        /// </summary>
         public WebControlServer(Form1 form, Config config)
         {
             _form = form;
@@ -51,13 +59,19 @@ namespace LEDCountDown
             _listener = new HttpListener();
         }
 
+        /// <summary>
+        /// 启动 HTTP 服务。
+        /// 优先绑定到 http://+:port （允许局域网远程访问），
+        /// 若失败则回退到 http://localhost:port （仅本机访问）。
+        /// 启动前会自动尝试添加 Windows 防火墙入站规则。
+        /// </summary>
         public void Start()
         {
             if (_running) return;
 
             string portStr = Port.ToString();
 
-            // 优先使用 + 前缀（允许局域网访问）
+            // 使用 "+" 前缀绑定到所有网络接口，允许局域网内的设备访问
             _listener.Prefixes.Add("http://+:" + portStr + "/");
 
             try
@@ -74,7 +88,7 @@ namespace LEDCountDown
             {
                 Console.WriteLine("[WebControl] 使用 + 前缀失败 (" + ex.Message + ")，尝试 localhost...");
 
-                // 回退到 localhost
+                // 回退到 localhost 绑定（通常因权限不足，需要管理员才能绑定 +）
                 try { _listener.Stop(); } catch { }
                 _listener.Prefixes.Clear();
                 _listener.Prefixes.Add("http://localhost:" + portStr + "/");
@@ -94,11 +108,15 @@ namespace LEDCountDown
             }
         }
 
+        /// <summary>
+        /// 添加 Windows 防火墙入站规则，允许外部设备通过 TCP 访问 Web 控制端口。
+        /// 如果规则已存在则跳过；非管理员运行时静默失败。
+        /// </summary>
         private static void AddFirewallRule(string port)
         {
             try
             {
-                // 先检查规则是否已存在
+                // 先检查规则是否已存在，避免重复添加
                 var checkPsi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "netsh",
@@ -115,7 +133,7 @@ namespace LEDCountDown
                         return; // 规则已存在，跳过
                 }
 
-                // 规则不存在，添加之
+                // 规则不存在，添加允许 TCP 入站的新规则
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "netsh",
@@ -132,16 +150,21 @@ namespace LEDCountDown
             }
             catch
             {
-                // 非管理员运行时静默跳过
+                // 非管理员运行时无法操作防火墙，静默跳过
             }
         }
 
+        /// <summary>停止 HTTP 监听服务</summary>
         public void Stop()
         {
             _running = false;
             try { _listener.Stop(); } catch { }
         }
 
+        /// <summary>
+        /// HTTP 请求监听循环（在独立后台线程中运行）。
+        /// 每收到一个请求就将其放入 ThreadPool 异步处理，避免阻塞下个请求。
+        /// </summary>
         private void ListenLoop()
         {
             while (_running)
@@ -153,15 +176,20 @@ namespace LEDCountDown
                 }
                 catch (HttpListenerException)
                 {
-                    break;
+                    break;  // 监听器被停止时退出循环
                 }
                 catch (InvalidOperationException)
                 {
-                    break;
+                    break;  // 监听器已关闭或未启动
                 }
             }
         }
 
+        /// <summary>
+        /// 路由处理：根据 URL 路径分发到对应的处理方法。
+        /// 根路径 / 或 /index.html 返回静态控制页面；
+        /// /api/* 路径由对应 API 处理器处理。
+        /// </summary>
         private void HandleRequest(HttpListenerContext ctx)
         {
             try
@@ -177,40 +205,40 @@ namespace LEDCountDown
                     return;
                 }
 
-                // ── API 路由 ──
+                // ── API 路由分发 ──
                 switch (path)
                 {
-                    case "/api/config":
+                    case "/api/config":          // GET 获取配置 / POST 修改配置
                         HandleConfigApi(request, response);
                         break;
-                    case "/api/marquee":
+                    case "/api/marquee":          // POST 更新滚动字幕文字
                         HandleMarqueeApi(request, response);
                         break;
-                    case "/api/logo":
+                    case "/api/logo":             // POST 上传 Logo 图片
                         HandleLogoApi(request, response);
                         break;
-                    case "/api/logo/clear":
+                    case "/api/logo/clear":       // POST 清除 Logo
                         HandleLogoClearApi(response);
                         break;
-                    case "/api/countdown/start":
+                    case "/api/countdown/start":  // POST 开始倒计时
                         HandleCountdownStartApi(request, response);
                         break;
-                    case "/api/countdown/reset":
+                    case "/api/countdown/reset":  // POST 重置倒计时
                         HandleCountdownResetApi(response);
                         break;
-                    case "/api/clockface":
+                    case "/api/clockface":        // GET 获取钟面列表 / POST 切换钟面
                         HandleClockFaceApi(request, response);
                         break;
-                    case "/api/autostart":
+                    case "/api/autostart":        // GET 查询自启 / POST 设置自启
                         HandleAutoStartApi(request, response);
                         break;
-                    case "/api/restart":
+                    case "/api/restart":          // POST 重启程序
                         HandleRestartApi(response);
                         break;
-                    case "/api/exit":
+                    case "/api/exit":             // POST 退出程序
                         HandleExitApi(response);
                         break;
-                    case "/api/status":
+                    case "/api/status":           // GET 获取运行状态
                         HandleStatusApi(response);
                         break;
                     default:

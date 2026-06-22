@@ -11,40 +11,42 @@ namespace LEDCountDown
 
     public partial class Form1 : Form
     {
+        // ═══════════════════════════════════════════
+        //  字段定义
+        // ═══════════════════════════════════════════
 
         // ── 控件 ──
-        private PictureBox logoBox = null;
+        private PictureBox logoBox = null;            // Logo 显示控件（懒加载）
 
         // ── 时钟区域 ──
-        private int clockAreaLeft;
-        private int clockAreaSize;
+        private int clockAreaLeft;                    // 模拟时钟左上角 X 坐标
+        private int clockAreaSize;                    // 模拟时钟边长（正方形）
 
         // ── 滚动字幕 ──
-        private float scrollX;                // 当前文字 X 坐标
-        private int lastTick;                 // 上次刷新时间戳（帧平滑）
-        private string marqueeText;
-        private Font marqueeFont = null;
-        private float marqueeTextWidth;
-        private bool marqueeNeedsScroll;      // 文字是否需要滚动
+        private float scrollX;                        // 当前文字 X 坐标（用于滚动动画）
+        private int lastTick;                         // 上次空闲帧的时间戳（帧平滑用）
+        private string marqueeText;                   // 当前字幕文字内容
+        private Font marqueeFont = null;               // 字幕字体（按窗体高度动态创建）
+        private float marqueeTextWidth;               // 字幕文字像素宽度
+        private bool marqueeNeedsScroll;               // 文字宽度是否超过显示区域，需要滚动
 
         // ── 倒计时 ──
         private enum CountdownState { Idle, Running, Finished }
         private CountdownState _countdownState = CountdownState.Idle;
-        private int _countdownTotalSeconds;
-        private double _countdownRemainingSeconds;
-        private int _countdownEndTick;          // Environment.TickCount 倒计时结束时刻
-        private bool _reminded1Min;             // 1 分钟提醒是否已触发
-        private bool _countdownEndPlayed;       // 倒计时结束声音是否已播放
+        private int _countdownTotalSeconds;            // 倒计时总秒数
+        private double _countdownRemainingSeconds;     // 剩余秒数（支持毫秒精度）
+        private int _countdownEndTick;                 // Environment.TickCount 倒计时结束时刻
+        private bool _reminded1Min;                    // 1 分钟提醒提示音是否已触发
+        private bool _countdownEndPlayed;              // 倒计时结束提示音是否已播放
 
         // ── 字体 ──
-        private System.Drawing.Text.PrivateFontCollection _fontCollection = null;
-        private FontFamily _countdownFontFamily = null;
+        private PrivateFontCollection _fontCollection = null;   // LED 数字字体集合
+        private FontFamily _countdownFontFamily = null;         // 加载的 LED 字体族
 
-        // ── 时钟样式 ──
+        // ── 时钟样式索引（0~4） ──
         private int _clockFaceIndex;
 
-        // ── 时钟 ──
-
+        // ── 窗体尺寸与配置 ──
         private readonly int formWidth;
         private readonly int formHeight;
         private readonly Config config;

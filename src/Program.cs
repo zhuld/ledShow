@@ -12,30 +12,30 @@ namespace LEDCountDown
 {
     static class Program
     {
-        // 防止系统进入睡眠或关闭显示器
-        // ES_CONTINUOUS = 0x80000000, ES_SYSTEM_REQUIRED = 0x00000001, ES_DISPLAY_REQUIRED = 0x00000002
+        // ── 电源管理常量 ──
+        // ES_CONTINUOUS = 持续生效, ES_SYSTEM_REQUIRED = 阻止系统睡眠, ES_DISPLAY_REQUIRED = 阻止显示器关闭
         private const uint ES_CONTINUOUS = 0x80000000;
         private const uint ES_SYSTEM_REQUIRED = 0x00000001;
         private const uint ES_DISPLAY_REQUIRED = 0x00000002;
 
+        /// <summary>阻止系统进入睡眠或关闭显示器（用于 LED 展示场景）</summary>
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern uint SetThreadExecutionState(uint esFlags);
 
+        /// <summary>网页控制服务器实例，用于在退出时关闭</summary>
         private static WebControlServer _webServer;
 
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
+        /// <summary>应用程序主入口点</summary>
         [STAThread]
         static void Main(string[] args)
         {
-            // 禁止系统息屏和睡眠
+            // 禁止系统息屏和睡眠，确保 LED 显示持续可见
             SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
-            // 加载配置（文件不存在则自动创建）
+            // 加载配置文件（文件不存在则自动创建默认配置）
             Config config = Config.Load();
 
-            // 命令行参数可覆盖配置
+            // 解析命令行参数，支持 --width 和 --height 覆盖配置文件中的窗口尺寸
             for (int i = 0; i < args.Length; i++)
             {
                 int val;
@@ -50,18 +50,18 @@ namespace LEDCountDown
 
             Form1 form = new Form1(config);
 
-            // 应用程序退出时恢复系统默认电源策略
+            // 注册应用程序退出事件：先停止 Web 服务器，再恢复系统默认电源策略
             Application.ApplicationExit += (sender, e) =>
             {
                 _webServer.Stop();
                 SetThreadExecutionState(ES_CONTINUOUS);
             };
 
-            // 启动网页控制服务器
+            // 启动 HTTP 网页控制服务器，允许局域网内的设备通过浏览器控制 LED 显示
             _webServer = new WebControlServer(form, config);
             _webServer.Start();
 
-            // 输出局域网访问地址
+            // 在控制台输出本机 IP 和局域网访问地址
             PrintLocalAddresses(config.WebPort);
 
             Application.Run(form);

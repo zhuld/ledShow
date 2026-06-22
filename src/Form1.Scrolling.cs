@@ -11,11 +11,13 @@ namespace LEDCountDown
         // ═══════════════════════════════════════════
         //  横向滚动字幕（中间）
         // ═══════════════════════════════════════════
+        /// <summary>获取滚动字幕的起始 X 坐标（Logo 右侧或左侧 10px）</summary>
         private float GetMarqueeLeft()
         {
             return logoBox != null ? logoBox.Right + 15 : 10;
         }
 
+        /// <summary>初始化滚动字幕：创建字体、判断是否需要滚动、挂载绘制事件</summary>
         private void InitMarquee()
         {
             int fontSize = (int)(formHeight * 0.8f);
@@ -45,6 +47,10 @@ namespace LEDCountDown
             Paint += FormPaint;
         }
 
+        /// <summary>
+        /// 应用程序空闲时触发：更新倒计时剩余时间 + 滚动字幕位置。
+        /// 使用帧平滑（elapsed 增量）确保滚动速度不受帧率波动影响。
+        /// </summary>
         private void OnMarqueeIdle(object sender, EventArgs e)
         {
             int now = Environment.TickCount;
@@ -54,22 +60,24 @@ namespace LEDCountDown
             // ── 倒计时逻辑 ──
             if (_countdownState == CountdownState.Running)
             {
+                // 根据 _countdownEndTick 计算精确剩余秒数（支持毫秒级精度）
                 double remaining = (_countdownEndTick - now) / 1000.0;
                 if (remaining <= 0)
                 {
+                    // 倒计时归零：播放结束提示音（仅一次），恢复空闲状态以显示滚动字幕
                     if (!_countdownEndPlayed)
                     {
                         _countdownEndPlayed = true;
                         SystemSounds.Exclamation.Play();
                     }
                     _countdownRemainingSeconds = 0;
-                    _countdownState = CountdownState.Idle;  // 倒计时结束，立即恢复滚动字符
+                    _countdownState = CountdownState.Idle;
                 }
                 else
                 {
                     _countdownRemainingSeconds = remaining;
 
-                    // ── 到达 1 分钟时播放提示音 ──
+                    // ── 到达 1 分钟时播放提示音（仅对总时长 > 60s 的倒计时生效）──
                     int secs = (int)Math.Ceiling(remaining);
                     if (!_reminded1Min && secs <= 60 && _countdownTotalSeconds > 60)
                     {
@@ -79,25 +87,30 @@ namespace LEDCountDown
                 }
             }
 
-
             // ── 字幕滚动（仅在倒计时空闲时滚动）──
             if (_countdownState == CountdownState.Idle && marqueeNeedsScroll)
             {
-                // 防止卡顿时瞬间大跳
+                // 防止卡顿时瞬间大跳：仅当帧间隔 < 100ms 时才执行滚动，
+                // 避免长时间挂起后（如调试断点）文字瞬间飞走
                 if (elapsed > 0 && elapsed < 100)
                     scrollX -= 0.15f * elapsed;
 
-                // 完全移出左侧后，将滚动位置向前回绕一整段，实现无缝衔接
+                // 完全移出左侧后，将滚动位置向前回绕一整段，实现无缝衔接循环
                 if (scrollX + marqueeTextWidth < 0)
                     scrollX += marqueeTextWidth + 30;
             }
 
-            Invalidate();           // 刷新字幕+时钟（窗体双缓冲，无闪烁）
+            Invalidate();   // 触发重绘，刷新字幕 + 时钟（窗体已开启 DoubleBuffered，无闪烁）
         }
 
+        /// <summary>
+        /// 主绘制方法：绘制滚动字幕或倒计时数字。
+        /// 倒计时时全屏居中显示大号 LED 数字；空闲时显示滚动字幕 + 边缘淡入淡出遮罩。
+        /// </summary>
         private void FormPaint(object sender, PaintEventArgs e)
         {
             var g = e.Graphics;
+            // 开启高质量渲染模式，消除锯齿
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
             g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
             g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
@@ -118,11 +131,13 @@ namespace LEDCountDown
 
                 if (_countdownState == CountdownState.Running)
                 {
+                    // 计算 MM:SS 格式，冒号每 500ms 闪烁一次（奇偶交替空格/冒号）
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
                     int m = totalSecs / 60;
                     int s = totalSecs % 60;
                     string colon = Environment.TickCount / 500 % 2 == 0 ? " " : ":";
                     displayText = string.Format("{0,2}" + colon + "{1:D2}", m, s);
+                    // 不同剩余时间显示不同警示色：<=60s 红, <=300s 橙, >300s 绿
                     if (totalSecs <= 60)
                         textColor = Color.Red;
                     else if (totalSecs <= 300)
@@ -132,6 +147,7 @@ namespace LEDCountDown
                 }
                 else
                 {
+                    // CountdownState.Finished：倒计时结束，显示金色提示
                     displayText = "时间到!";
                     textColor = Color.Gold;
                 }
