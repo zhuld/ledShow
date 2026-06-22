@@ -118,27 +118,6 @@ namespace LEDCountDown
 
                 if (_countdownState == CountdownState.Running)
                 {
-                    // ── 有活跃提醒时显示提醒文字（持续 2 秒）──
-                    if (!string.IsNullOrEmpty(_notificationMsg) && Environment.TickCount < _notificationEndTick)
-                    {
-                        int fontSize = (int)(formHeight * 0.7f);
-                        using (var font = new Font("微软雅黑", fontSize, FontStyle.Regular, GraphicsUnit.Pixel))
-                        using (var brush = new SolidBrush(Color.Gold))
-                        {
-                            g.SetClip(new RectangleF(marqueeLeft, 0, marqueeWidth, Height));
-                            var sz = g.MeasureString(_notificationMsg, font);
-                            float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
-                            float cy = centerY - sz.Height / 2f;
-                            g.DrawString(_notificationMsg, font, brush, cx, cy);
-                            g.ResetClip();
-                        }
-                        return;
-                    }
-                    else
-                    {
-                        _notificationMsg = "";  // 过期后清除
-                    }
-
                     int totalSecs = (int)Math.Ceiling(_countdownRemainingSeconds);
                     int m = totalSecs / 60;
                     int s = totalSecs % 60;
@@ -167,7 +146,6 @@ namespace LEDCountDown
                     float cx = marqueeLeft + (marqueeWidth - sz.Width) / 2f;
                     float cy = centerY - sz.Height / 2f;
                     // 底层：半透明 88:88 占位符（冒号同步闪烁）
-                    string placeholderColon = Environment.TickCount / 500 % 2 == 0 ? " " : ":";
                     using (var dimBrush = new SolidBrush(Color.FromArgb(5, textColor)))
                         g.DrawString("88:88", font, dimBrush, cx, cy);
                     // 模糊边缘层：在数字周围绘制多重半透明偏移副本，营造柔光模糊效果

@@ -54,9 +54,6 @@ namespace LEDCountDown
             Invalidate();
         }
 
-        /// <summary>获取当前钟面样式索引</summary>
-        public int GetClockFace() { return _clockFaceIndex; }
-
         // ═══════════════════════════════════════════
         //  公开方法：更换 Logo
         // ═══════════════════════════════════════════
@@ -82,13 +79,6 @@ namespace LEDCountDown
                 logoBox.Image = Image.FromFile(imagePath);
                 logoBox.Invalidate();
             }
-        }
-
-        public void SetLogo(Image image)
-        {
-            EnsureLogoBox();
-            logoBox.Image = image;
-            logoBox.Invalidate();
         }
 
         // ═══════════════════════════════════════════
@@ -184,16 +174,7 @@ namespace LEDCountDown
             _countdownRemainingSeconds = 0;
             _reminded1Min = false;
             _countdownEndPlayed = false;
-            _notificationMsg = "";
             Invalidate();
-        }
-
-        /// <summary>显示提醒通知（2 秒后自动消失）</summary>
-        private void ShowNotification(string msg)
-        {
-            _notificationMsg = msg;
-            _notificationEndTick = Environment.TickCount + 2000;
-            SystemSounds.Beep.Play();
         }
 
         /// <summary>获取倒计时状态（线程安全，供 API 调用）</summary>
