@@ -9,7 +9,8 @@
 - **中间滚动字幕**：横向循环滚动，发光辉光 + 边缘淡入淡出，颜色随钟面主题联动
 - **右侧拟物时钟**：60 个精密刻度，锥形指针 + 配重秒针，5 种高级配色主题，2x 超采样抗锯齿
 - **倒计时**：支持时分秒设置，使用 DSEG14 LED 等宽字体，颜色随剩余时间变化，结束后立即恢复字幕
-- **网页控制**：内置 HTTP 服务器，通过浏览器实时控制
+- **网页控制**：内置 HTTP 服务器，支持局域网/本机浏览器实时控制
+- **管理员权限**：自动请求管理员权限，自动配置防火墙和 URL ACL
 - **防息屏**：程序运行时阻止系统进入睡眠和关闭显示器，适合长时间信息展示
 - **命令行参数**：支持 `--width` 和 `--height` 参数覆盖窗口尺寸
 - **开机自启**：支持通过网页控制面板设置/取消开机自启
@@ -24,6 +25,7 @@ LEDCountDown/
 ├── .vscode/                # VS Code 配置（任务）
 │   └── tasks.json
 ├── src/                    # 源代码目录
+│   ├── app.manifest        # 应用程序清单（请求管理员权限）
 │   ├── LEDCountDown.csproj # 项目文件（.NET Framework 2.0）
 │   ├── Program.cs          # 入口点
 │   ├── Config.cs           # 配置文件读写
@@ -32,12 +34,16 @@ LEDCountDown/
 │   ├── Form1.Scrolling.cs  # 滚动字幕 + 倒计时逻辑 + 主渲染
 │   ├── Form1.Public.cs     # 公开 API（字幕、Logo、倒计时控制等）
 │   ├── Form1.Designer.cs   # 窗体设计器代码
-│   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器 + 前端页面
+│   ├── WebControlServer.cs # 内置 HTTP 网页控制服务器
+│   ├── web/
+│   │   └── index.html      # 独立网页控制面板（可直接编辑）
 │   └── Resources/
 │       ├── clock.ico                      # 应用图标（256×256，新拟物表盘）
 │       └── DigitalNumbers-Regular.ttf     # LED 等宽字体
 ├── bin/                    # 构建输出（已 gitignore）
 │   └── Debug/
+│       ├── web/
+│       │   └── index.html  # 复制的控制面板页面
 │       ├── logos/          # 网页上传的 Logo 图片（运行时创建）
 │       └── Resources/      # 资源文件
 └── obj/                    # 临时编译文件（已 gitignore）
@@ -45,7 +51,24 @@ LEDCountDown/
 
 ## 网页控制
 
-启动程序后，在浏览器打开 **http://localhost:8000** 即可访问控制面板。
+启动程序后，在浏览器打开以下地址即可访问控制面板：
+
+```
+本机:   http://localhost:8000/
+局域网:  http://192.168.x.x:8000/    （以实际 IP 为准）
+```
+
+程序启动时会自动输出所有可用的访问地址。
+
+### 网络访问说明
+
+程序以 **管理员权限** 运行时会自动执行以下操作：
+
+1. **绑定全局端口** — 通过 `http://+:8000/` 前缀监听所有网络接口
+2. **添加防火墙规则** — 自动开放 Windows 防火墙 TCP 端口（规则名 `LED Web Control`）
+3. **输出访问地址** — 控制台窗口中显示本机和局域网 IP 地址
+
+> 如果 `+` 前缀绑定失败（如非管理员运行），会自动回退到 `http://localhost:{port}/` 仅本机访问。
 
 ### 控制功能
 
@@ -75,11 +98,10 @@ LEDCountDown/
 | POST | `/api/countdown/reset` | 重置倒计时 |
 | GET | `/api/clockface` | 获取当前钟面及所有可选主题列表 |
 | POST | `/api/clockface` | `{"index":N}` 切换钟面样式 (0-4) |
+| GET/POST | `/api/autostart` | 查询/设置开机自启 |
+| GET | `/api/status` | 获取运行状态（含倒计时和开机自启信息） |
 | POST | `/api/restart` | 重启程序 |
 | POST | `/api/exit` | 退出程序 |
-| GET | `/api/status` | 获取运行状态（含倒计时和开机自启信息） |
-| GET | `/api/autostart` | 查询开机自启状态 |
-| POST | `/api/autostart` | `{"enable":true/false}` 设置/取消开机自启 |
 
 ### 端口配置
 
@@ -90,6 +112,8 @@ LEDCountDown/
   "webPort": 8080
 }
 ```
+
+> 修改端口后需要重启程序生效。首次以管理员运行时会自动注册 URL ACL 和防火墙规则。
 
 ## 钟面样式
 
@@ -157,6 +181,8 @@ dotnet build src\LEDCountDown.csproj
 dotnet run --project src\LEDCountDown.csproj
 ```
 
+> 首次运行会弹出 **UAC 管理员提权提示**，请点击"是"以允许程序绑定网络端口和配置防火墙。
+
 支持命令行参数覆盖窗口尺寸：
 
 ```bash
@@ -188,6 +214,10 @@ dotnet run --project src\LEDCountDown.csproj -- --width 1920 --height 240
 | `logoPath` | Logo 图片路径（留空不显示） |
 | `clockFace` | 钟面样式索引 (0-4，默认 0) |
 
+### 自定义网页界面
+
+网页控制面板位于 `src/web/index.html`，可直接编辑 HTML/CSS/JavaScript 修改界面样式，**无需重新编译**程序即可生效。
+
 ### 更换 Logo
 
 在 `config.json` 中设置 `logoPath`，或通过代码调用：
@@ -204,6 +234,7 @@ form.SetLogo(Image.FromFile("logo.png"));
 - 2x 超采样抗锯齿 + `HighQualityBicubic` 缩放
 - `Application.Idle` 驱动高帧率动画
 - `SetThreadExecutionState` 阻止系统息屏/睡眠
-- `HttpListener` 内置 HTTP 服务器
+- `HttpListener` 内置 HTTP 服务器（支持局域网访问）
+- Windows 防火墙 API（`netsh advfirewall`）
 - DSEG14 LED 等宽字体（SIL Open Font License）
 - JSON 配置文件

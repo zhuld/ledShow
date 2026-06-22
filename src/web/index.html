@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED 显示屏控制</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, 'Microsoft YaHei', sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 40px;
+            width: 520px;
+            max-width: 94vw;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+            border: 1px solid #30363d;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 28px;
+            color: #58a6ff;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #8b949e;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #0d1117;
+            color: #c9d1d9;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #58a6ff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 8px 0;
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity .2s;
+        }
+
+        .btn:hover {
+            opacity: .85;
+        }
+
+        .btn-primary {
+            background: #238636;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #da3633;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .btn-success {
+            background: #238636;
+            color: #fff;
+            border: 1px solid #2ea043;
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            text-align: center;
+        }
+
+        .status-bar.success {
+            display: block;
+            background: #0d3a1a;
+            color: #3fb950;
+            border: 1px solid #196c2e;
+        }
+
+        .status-bar.error {
+            display: block;
+            background: #3a0d0d;
+            color: #f85149;
+            border: 1px solid #6c1919;
+        }
+
+        .status-bar.info {
+            display: block;
+            background: #0d1f3a;
+            color: #58a6ff;
+            border: 1px solid #1c4b8c;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: #8b949e;
+            margin: 24px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media(max-width:480px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .server-info {
+            text-align: center;
+            font-size: 12px;
+            color: #484f58;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔴 LED 显示屏控制</h1>
+
+        <div class="section-title">字幕文字</div>
+        <div class="form-group">
+            <label for="marqueeText">滚动文字</label>
+            <textarea id="marqueeText" placeholder="输入显示文字..."></textarea>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="updateMarquee()">更新字幕</button>
+            </div>
+        </div>
+
+        <div class="section-title">Logo 图片</div>
+        <div class="form-group">
+            <label for="logoFile">上传 Logo 图片</label>
+            <input type="file" id="logoFile" accept="image/*">
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="uploadLogo()">上传 Logo</button>
+                <button class="btn btn-danger" onclick="clearLogo()">清除 Logo</button>
+            </div>
+        </div>
+
+        <div class="section-title">窗口尺寸</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="width">宽度</label>
+                <input type="text" id="width" placeholder="1500">
+            </div>
+            <div class="form-group">
+                <label for="height">高度</label>
+                <input type="text" id="height" placeholder="190">
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="updateConfig()">保存配置</button>
+            <button class="btn btn-secondary" onclick="loadConfig()">刷新</button>
+        </div>
+
+        <div class="section-title">钟面样式</div>
+        <div class="form-group">
+            <label for="clockFace">选择钟面</label>
+            <select id="clockFace" onchange="setClockFace()">
+                <option value="0">🤍 典雅白陶瓷</option>
+                <option value="1">💙 深海幽蓝</option>
+                <option value="2">❤️ 勃艮第酒红</option>
+                <option value="3">🩶 陨石灰</option>
+                <option value="4">🖤 墨玉黑金</option>
+            </select>
+        </div>
+
+        <div class="section-title">倒计时</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="cdMin">分</label>
+                <input type="text" id="cdMin" placeholder="10" value="10">
+            </div>
+            <div class="form-group">
+                <label for="cdSec">秒</label>
+                <input type="text" id="cdSec" placeholder="0" value="0">
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="startCountdown()">开始倒计时</button>
+            <button class="btn btn-danger" onclick="resetCountdown()">重置</button>
+        </div>
+
+        <div class="section-title">操作</div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="restartApp()">重启程序</button>
+            <button class="btn btn-danger" onclick="exitApp()">退出程序</button>
+        </div>
+
+        <div class="section-title">开机自启</div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="autoStartBtn" onclick="toggleAutoStart()">加载中...</button>
+        </div>
+
+        <div id="status" class="status-bar"></div>
+        <div class="server-info">LED Web Control v1.0</div>
+    </div>
+
+    <script>
+        async function api(method, path, body) {
+            const opts = { method };
+            if (body instanceof FormData) {
+                opts.body = body;
+            } else if (body !== undefined) {
+                opts.headers = { 'Content-Type': 'application/json' };
+                opts.body = JSON.stringify(body);
+            }
+            const r = await fetch(path, opts);
+            const text = await r.text();
+            try { return JSON.parse(text); } catch (e) { return text; }
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.textContent = msg; el.className = 'status-bar ' + type;
+            setTimeout(() => { if (el.className.includes(type)) el.style.display = 'none'; }, 5000);
+        }
+
+        async function loadConfig() {
+            try {
+                const [cfg, cfInfo] = await Promise.all([
+                    api('GET', '/api/config'),
+                    api('GET', '/api/clockface')
+                ]);
+                document.getElementById('marqueeText').value = cfg.marqueeText || '';
+                document.getElementById('width').value = cfg.width || 1500;
+                document.getElementById('height').value = cfg.height || 190;
+                document.getElementById('clockFace').value = cfg.clockFace || 0;
+                const sel = document.getElementById('clockFace');
+                if (cfInfo && cfInfo.themes) {
+                    for (let i = 0; i < sel.options.length && i < cfInfo.themes.length; i++) {
+                        sel.options[i].text = cfInfo.themes[i].name;
+                    }
+                }
+            } catch (e) { showStatus('加载配置失败', 'error'); }
+        }
+
+        async function setClockFace() {
+            const idx = parseInt(document.getElementById('clockFace').value);
+            try {
+                const r = await api('POST', '/api/clockface', { index: idx });
+                if (r.success) showStatus('钟面已切换: ' + r.name, 'success');
+                else showStatus(r.error || '切换失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function updateMarquee() {
+            const text = document.getElementById('marqueeText').value;
+            if (!text) { showStatus('请输入文字', 'error'); return; }
+            try {
+                const r = await api('POST', '/api/marquee', { text });
+                if (r.success) showStatus('字幕已更新', 'success');
+                else showStatus(r.error || '更新失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function uploadLogo() {
+            const fileInput = document.getElementById('logoFile');
+            if (!fileInput.files || !fileInput.files[0]) { showStatus('请选择图片', 'error'); return; }
+            const fd = new FormData();
+            fd.append('logo', fileInput.files[0]);
+            try {
+                const r = await api('POST', '/api/logo', fd);
+                if (r.success) showStatus('Logo 已更新', 'success');
+                else showStatus(r.error || '上传失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function clearLogo() {
+            try {
+                const r = await api('POST', '/api/logo/clear');
+                if (r.success) showStatus('Logo 已清除', 'success');
+                else showStatus(r.error || '清除失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function updateConfig() {
+            const w = parseInt(document.getElementById('width').value);
+            const h = parseInt(document.getElementById('height').value);
+            const t = document.getElementById('marqueeText').value;
+            if (!w || !h) { showStatus('请输入有效尺寸', 'error'); return; }
+            try {
+                const r = await api('POST', '/api/config', { width: w, height: h, marqueeText: t });
+                if (r.success) showStatus('配置已保存（重启后生效尺寸）', 'success');
+                else showStatus(r.error || '保存失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function startCountdown() {
+            const m = parseInt(document.getElementById('cdMin').value) || 0;
+            const s = parseInt(document.getElementById('cdSec').value) || 0;
+            const total = m * 60 + s;
+            if (total < 1) { showStatus('请输入有效的时间', 'error'); return; }
+            try {
+                const r = await api('POST', '/api/countdown/start', { seconds: total });
+                if (r.success) {
+                    showStatus('倒计时已开始: ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'), 'success');
+                }
+                else showStatus(r.error || '启动失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function resetCountdown() {
+            try {
+                const r = await api('POST', '/api/countdown/reset');
+                if (r.success) showStatus('倒计时已重置', 'info');
+                else showStatus(r.error || '重置失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function restartApp() {
+            if (!confirm('确定要重启程序吗？')) return;
+            try { await api('POST', '/api/restart'); } catch (e) { }
+        }
+
+        async function toggleAutoStart() {
+            const btn = document.getElementById('autoStartBtn');
+            const enable = btn.dataset.enabled === 'false';
+            try {
+                const r = await api('POST', '/api/autostart', { enable });
+                if (r.success) { btn.dataset.enabled = enable ? 'true' : 'false'; updateAutoStartBtn(); }
+                else showStatus(r.error || '操作失败', 'error');
+            } catch (e) { showStatus('请求失败: ' + e.message, 'error'); }
+        }
+
+        async function checkAutoStart() {
+            try {
+                const r = await api('GET', '/api/autostart');
+                const btn = document.getElementById('autoStartBtn');
+                btn.dataset.enabled = r.enabled ? 'true' : 'false';
+                updateAutoStartBtn();
+            } catch (e) { }
+        }
+
+        function updateAutoStartBtn() {
+            const btn = document.getElementById('autoStartBtn');
+            const enabled = btn.dataset.enabled === 'true';
+            btn.textContent = enabled ? '✅ 已开启开机自启（点击关闭）' : '⛔ 未开启开机自启（点击开启）';
+            btn.className = enabled ? 'btn btn-success' : 'btn btn-secondary';
+        }
+
+        async function exitApp() {
+            if (!confirm('确定要退出程序吗？')) return;
+            try { await api('POST', '/api/exit'); } catch (e) { }
+        }
+
+        loadConfig();
+        checkAutoStart();
+    </script>
+</body>
+
+</html>

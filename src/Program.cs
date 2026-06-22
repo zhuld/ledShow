@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -47,6 +49,7 @@ namespace LEDCountDown
             // 应用程序退出时恢复系统默认电源策略
             Application.ApplicationExit += (sender, e) =>
             {
+                _webServer.Stop();
                 SetThreadExecutionState(ES_CONTINUOUS);
             };
 
@@ -54,7 +57,42 @@ namespace LEDCountDown
             _webServer = new WebControlServer(form, config);
             _webServer.Start();
 
+            // 输出局域网访问地址
+            PrintLocalAddresses(config.WebPort);
+
             Application.Run(form);
+        }
+
+        /// <summary>输出本机 IP 地址，方便局域网访问</summary>
+        private static void PrintLocalAddresses(int port)
+        {
+            try
+            {
+                Console.WriteLine("");
+                Console.WriteLine("═══════════════════════════════════════");
+                Console.WriteLine("  LED 网页控制面板访问地址");
+                Console.WriteLine("───────────────────────────────────────");
+                Console.WriteLine("  本机:    http://localhost:" + port + "/");
+                Console.WriteLine("  本机:    http://127.0.0.1:" + port + "/");
+
+                // 获取局域网 IP
+                string hostName = Dns.GetHostName();
+                IPAddress[] addresses = Dns.GetHostEntry(hostName).AddressList;
+                foreach (IPAddress addr in addresses)
+                {
+                    if (addr.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        Console.WriteLine("  局域网:  http://" + addr + ":" + port + "/");
+                    }
+                }
+
+                Console.WriteLine("═══════════════════════════════════════");
+                Console.WriteLine("");
+            }
+            catch
+            {
+                // 静默忽略
+            }
         }
     }
 }

@@ -40,6 +40,9 @@
     <Compile Include="WebControlServer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="web\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\DigitalNumbers-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
