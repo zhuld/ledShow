@@ -333,23 +333,47 @@ checkAutoStart();
         {
             if (_running) return;
 
-            // 直接使用 localhost 前缀，无需管理员权限
-            _listener.Prefixes.Add("http://localhost:" + Port + "/");
+            string portStr = Port.ToString();
+
+            _listener.Prefixes.Add("http://+:" + portStr + "/");
 
             try
             {
+                AddFirewallRule(portStr);
+
                 _listener.Start();
                 _running = true;
-                _serverThread = new Thread(ListenLoop)
-                {
-                    IsBackground = true
-                };
+                _serverThread = new Thread(ListenLoop) { IsBackground = true };
                 _serverThread.Start();
-                Console.WriteLine("[WebControl] 服务器已启动: http://localhost:" + Port);
+                Console.WriteLine("[WebControl] 已启动: http://+:" + portStr);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[WebControl] 启动失败: " + ex.Message);
+            }
+        }
+
+        private static void AddFirewallRule(string port)
+        {
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = "advfirewall firewall add rule name=\"LED Web Control\" dir=in action=allow protocol=TCP localport=" + port,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                using (var p = System.Diagnostics.Process.Start(psi))
+                {
+                    p.WaitForExit(3000);
+                }
+            }
+            catch
+            {
+                // 非管理员运行时静默跳过
             }
         }
 
